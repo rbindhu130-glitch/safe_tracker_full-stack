@@ -1,3 +1,8 @@
+// Helper to get API Base URL
+const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+    ? "http://127.0.0.1:8500"
+    : "";
+
 // Navbar Dynamic Logic
 const navLinks = document.getElementById('navLinks');
 const loggedUser = JSON.parse(localStorage.getItem("user"));
@@ -13,16 +18,6 @@ if (navLinks) {
             <a href="login.html" class="nav_link">Login</a>
             <a href="signup.html" class="nav_link">Sign Up</a>
         `;
-    }
-}
-
-// Dynamic logo redirect based on role
-const logoLink = document.getElementById('logoLink');
-if (logoLink && loggedUser) {
-    if (loggedUser.role === 'volunteer') {
-        logoLink.href = 'volunteer.html';
-    } else if (loggedUser.role === 'user') {
-        logoLink.href = 'user.html';
     }
 }
 
@@ -51,7 +46,7 @@ function loadProfileData() {
         const defaultIcon = document.getElementById("defaultIcon");
         let imgPath = user.profile_image;
         if (!imgPath.startsWith('http')) {
-            imgPath = `/api/${imgPath}`;
+            imgPath = `${apiBase}/${imgPath}`;
         }
         userImg.src = imgPath;
         userImg.classList.remove("hidden");
@@ -65,29 +60,6 @@ function loadProfileData() {
 
     // Address display
     document.getElementById("userAddress").textContent = user.address || "Address not set";
-}
-
-function openEditModal() {
-    document.getElementById("editModal").classList.remove("hidden");
-}
-
-function closeEditModal() {
-    document.getElementById("editModal").classList.add("hidden");
-}
-
-function previewImage(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const userImg = document.getElementById("userImg");
-            const defaultIcon = document.getElementById("defaultIcon");
-            userImg.src = e.target.result;
-            userImg.classList.remove("hidden");
-            defaultIcon.classList.add("hidden");
-        }
-        reader.readAsDataURL(file);
-    }
 }
 
 document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
@@ -105,24 +77,23 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
     }
 
     try {
-        const res = await fetch("/api/users/profile/update", {
+        const res = await fetch(`${apiBase}/api/users/profile/update`, {
             method: "PUT",
             body: formData
         });
 
         if (res.ok) {
             const updatedUser = await res.json();
-            const newUser = { ...user, ...updatedUser };
-            localStorage.setItem("user", JSON.stringify(newUser));
+            localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
             alert("Profile updated successfully!");
-            closeEditModal();
-            loadProfileData(); // Refresh sidebar data
-        } else {
-            const errorData = await res.json();
-            alert(errorData.detail || "Failed to update profile.");
+            document.getElementById("editModal").classList.add("hidden");
+            loadProfileData();
         }
     } catch (err) {
         console.error(err);
         alert("Server error. Try again.");
     }
 });
+
+function openEditModal() { document.getElementById("editModal").classList.remove("hidden"); }
+function closeEditModal() { document.getElementById("editModal").classList.add("hidden"); }

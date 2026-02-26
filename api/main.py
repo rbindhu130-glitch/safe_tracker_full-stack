@@ -38,7 +38,7 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(router.router)
+app.include_router(router.router, prefix="/api")
 
 
 @app.exception_handler(RequestValidationError)

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import shutil
 import os
-from .database import get_db
+from .database import get_db, supabase_client
 from .models import User, Incident, Complaint
 from .schemas import IncidentUpdate
 from . import schemas
@@ -127,20 +127,41 @@ def signup(
     image_path = None
 
     if role == "volunteer" and is_file:
-        os.makedirs("uploads", exist_ok=True)
-
-        # PRO-LEVEL: Clean the filename to remove spaces and special chars
+        # PRO-LEVEL: Clean the filename
         original_name = image.filename
         clean_name = "".join(
             c if c.isalnum() or c in "._-" else "_" for c in original_name
         )
+        file_name = f"profile_{email}_{clean_name}"
 
-        image_path = f"uploads/{clean_name}"
-        with open(image_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-
-        # Store full access path for the frontend
-        image_path = f"uploads/{clean_name}"
+        if supabase_client:
+            # Upload to Supabase Storage
+            try:
+                file_content = image.file.read()
+                # Upload to 'safetracker' bucket
+                supabase_client.storage.from_("safetracker").upload(
+                    path=file_name,
+                    file=file_content,
+                    file_options={"content-type": image.content_type, "upsert": "true"},
+                )
+                # Get public URL
+                image_path = supabase_client.storage.from_(
+                    "safetracker"
+                ).get_public_url(file_name)
+            except Exception as e:
+                print(f"Supabase upload error: {e}")
+                # Fallback to local if local dev
+                os.makedirs("uploads", exist_ok=True)
+                image_path = f"uploads/{clean_name}"
+                with open(image_path, "wb") as buffer:
+                    image.file.seek(0)
+                    shutil.copyfileobj(image.file, buffer)
+        else:
+            # Standard local storage fallback
+            os.makedirs("uploads", exist_ok=True)
+            image_path = f"uploads/{clean_name}"
+            with open(image_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
 
     from sqlalchemy.exc import IntegrityError
 
@@ -571,15 +592,38 @@ def update_profile(
         user.address = address
 
     if image and image.filename:
-        # Save new image
-        os.makedirs("uploads", exist_ok=True)
+        original_name = image.filename
         clean_name = "".join(
-            c if c.isalnum() or c in "._-" else "_" for c in image.filename
+            c if c.isalnum() or c in "._-" else "_" for c in original_name
         )
-        file_path = f"uploads/profile_{user_id}_{clean_name}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(image.file, buffer)
-        user.profile_image = file_path
+        file_name = f"profile_{user_id}_{clean_name}"
+
+        if supabase_client:
+            try:
+                file_content = image.file.read()
+                supabase_client.storage.from_("safetracker").upload(
+                    path=file_name,
+                    file=file_content,
+                    file_options={"content-type": image.content_type, "upsert": "true"},
+                )
+                user.profile_image = supabase_client.storage.from_(
+                    "safetracker"
+                ).get_public_url(file_name)
+            except Exception as e:
+                print(f"Update profile image error: {e}")
+                # Fallback
+                os.makedirs("uploads", exist_ok=True)
+                file_path = f"uploads/profile_{user_id}_{clean_name}"
+                with open(file_path, "wb") as buffer:
+                    image.file.seek(0)
+                    shutil.copyfileobj(image.file, buffer)
+                user.profile_image = file_path
+        else:
+            os.makedirs("uploads", exist_ok=True)
+            file_path = f"uploads/profile_{user_id}_{clean_name}"
+            with open(file_path, "wb") as buffer:
+                shutil.copyfileobj(image.file, buffer)
+            user.profile_image = file_path
 
     db.commit()
     db.refresh(user)

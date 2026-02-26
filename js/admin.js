@@ -1,15 +1,20 @@
+// Helper to get API Base URL
+const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+    ? "http://127.0.0.1:8500"
+    : "";
+
 async function fetchAllData() {
     try {
         // Fetch Users
-        const userRes = await fetch("/api/users/users-raw");
+        const userRes = await fetch(`${apiBase}/api/users/users-raw`);
         const users = await userRes.json();
 
         // Fetch Incidents
-        const incidentRes = await fetch("/api/users/incidents");
+        const incidentRes = await fetch(`${apiBase}/api/users/incidents`);
         const incidents = await incidentRes.json();
 
         // Fetch Complaints
-        const complaintRes = await fetch("/api/users/complaints");
+        const complaintRes = await fetch(`${apiBase}/api/users/complaints`);
         const complaints = await complaintRes.json();
 
         updateStats(users, incidents, complaints);
@@ -38,6 +43,12 @@ function renderUsers(users) {
             ? `<span class="badge ${user.is_approved ? 'badge_approved' : 'badge_pending'}">${user.is_approved ? 'Approved' : 'Pending'}</span>`
             : '<span class="badge badge_approved">N/A</span>';
 
+        // Fix for image path: Supabase URL starts with http, local path doesn't
+        let fullImagePath = user.profile_image || "";
+        if (fullImagePath && !fullImagePath.startsWith('http')) {
+            fullImagePath = `${apiBase}/${fullImagePath}`;
+        }
+
         return `
         <tr>
             <td>#${user.id}</td>
@@ -47,7 +58,7 @@ function renderUsers(users) {
             <td><span class="badge badge_${user.role}">${user.role}</span></td>
             <td>${approvalBadge}</td>
             <td>
-                ${isVolunteer ? `<button class="action_btn btn_view" onclick="openImage('http://localhost:8500/${user.profile_image}?t=${Date.now()}')">View ID</button>` : ''}
+                ${isVolunteer ? `<button class="action_btn btn_view" onclick="openImage('${fullImagePath}?t=${Date.now()}')">View ID</button>` : ''}
                 ${(isVolunteer && !user.is_approved) ? `<button class="action_btn btn_approve" onclick="approveVolunteer(${user.id})">Approve</button>` : ''}
                 <button class="action_btn btn_delete" onclick="deleteUser(${user.id})">Delete</button>
             </td>
@@ -99,7 +110,7 @@ function showSection(section) {
 
 async function approveVolunteer(id) {
     try {
-        const res = await fetch(`/api/users/admin/approve/${id}`, { method: 'PUT' });
+        const res = await fetch(`${apiBase}/api/users/admin/approve/${id}`, { method: 'PUT' });
         if (res.ok) {
             alert("Volunteer approved successfully!");
             fetchAllData();
@@ -111,6 +122,10 @@ function openImage(url) {
     console.log("Opening ID Image:", url);
     const modal = document.getElementById('imageModal');
     const img = document.getElementById('modalImg');
+    if (!url) {
+        alert("No image available");
+        return;
+    }
     img.src = url;
     modal.classList.remove('hidden');
 }
@@ -122,7 +137,7 @@ function closeModal() {
 async function deleteUser(id) {
     if (!confirm("Are you sure you want to delete this user?")) return;
     try {
-        const res = await fetch(`/api/users/admin/user/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${apiBase}/api/users/admin/user/${id}`, { method: 'DELETE' });
         if (res.ok) {
             alert("User deleted");
             fetchAllData();
@@ -133,4 +148,3 @@ async function deleteUser(id) {
 // Initial Load
 fetchAllData();
 setInterval(fetchAllData, 10000); // Auto refresh every 10s
-

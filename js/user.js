@@ -1,3 +1,8 @@
+// Helper to get API Base URL
+const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+    ? "http://127.0.0.1:8500"
+    : "";
+
 const incidentForm = document.getElementById("incidentForm");
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -120,142 +125,14 @@ locationInput.addEventListener("click", () => {
     if (!currentLat) handleGeolocation();
 });
 
-// Auto-refresh every 5 seconds to show live status updates
-setInterval(loadRequests, 5000);
-
-async function confirmIncident(incidentId, confirmed) {
-    try {
-        const response = await fetch(`/api/users/incidents/${incidentId}/confirm?confirmed=${confirmed}`, {
-            method: "PUT"
-        });
-        if (response.ok) {
-            loadRequests();
-        }
-    } catch (e) {
-        console.error("Confirmation error:", e);
-    }
-}
-
-
-
-incidentForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const title = document.getElementById("select").value;
-    const full_address = locationInput.value;
-
-    const payload = {
-        title: title,
-        full_address: full_address,
-        latitude: currentLat,
-        longitude: currentLng,
-        reporter_id: user.id
-    };
-
-    try {
-        let url = "/api/users/incidents";
-        let method = "POST";
-
-        if (editingId) {
-            url = `/api/users/incidents/${editingId}?user_id=${user.id}`;
-            method = "PUT";
-            // For update, exclude reporter_id in body if schema adheres strictly, 
-            // but our simple schema logic ignores extra fields or we can just send what's needed.
-        }
-
-        console.log(`Submitting ${method} to ${url} with payload:`, payload);
-
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
-        console.log("Server response:", result);
-
-        if (response.ok) {
-            alert(editingId ? "Request updated successfully!" : "Request submitted successfully!");
-
-            // Reset Form
-            incidentForm.reset();
-            currentLat = null;
-            currentLng = null;
-            editingId = null;
-            document.querySelector(".submit").innerText = "Submit Request"; // Reset button text
-
-            // Reload list to show changes
-            loadRequests();
-        } else {
-            alert("Error submitting request: " + (result.detail || "Unknown error"));
-        }
-    } catch (error) {
-        console.error("Error:", error);
-        alert("Could not connect to backend");
-    }
-});
-
-// Function to add a single incident to the request list
-function addIncidentToList(incident) {
-    const list = document.getElementById("requestList");
-
-    // Remove "No requests" message if present
-    const noReqMsg = list.querySelector("p");
-    if (noReqMsg) noReqMsg.remove();
-
-    const div = document.createElement("div");
-    div.className = "request_item";
-    div.innerHTML = `
-      <div class="request_info">
-        <h4>${incident.title}</h4>
-        <p>${incident.full_address || 'No address'}</p>
-      </div>
-      <span class="status_badge status_${incident.status}">${incident.status}</span>
-    `;
-
-    // Add at the top of the list
-    list.insertBefore(div, list.firstChild);
-}
-
-async function confirmIncident(id, confirmed) {
-    try {
-        const response = await fetch(`/api/users/incidents/${id}/confirm?confirmed=${confirmed}`, {
-            method: "PUT"
-        });
-        if (response.ok) {
-            alert(confirmed ? "Incident closed. Thank you!" : "Incident re-opened. We are re-assigning it.");
-            loadRequests();
-        }
-    } catch (e) {
-        console.error("Error confirming:", e);
-    }
-}
-
 async function loadRequests() {
     try {
-        if (!user || !user.id) {
-            console.error("User ID not found in local storage");
-            return;
-        }
+        if (!user || !user.id) return;
 
-        const url = `/api/users/incidents/user/${user.id}`;
-        console.log("Fetching URL:", url);
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            console.error("Fetch failed:", response.status, response.statusText);
-            const errText = await response.text();
-            console.error("Error details:", errText);
-            document.getElementById("requestList").innerHTML = `<p style='color:red; text-align:center;'>Error loading requests: ${response.status}</p>`;
-            return;
-        }
+        const response = await fetch(`${apiBase}/api/users/incidents/user/${user.id}`);
+        if (!response.ok) return;
 
         const data = await response.json();
-        console.log("Incidents from backend:", data);
-
         const list = document.getElementById("requestList");
         list.innerHTML = "";
 
@@ -270,17 +147,11 @@ async function loadRequests() {
 
             const div = document.createElement("div");
             div.className = "request_item";
-            div.style.flexDirection = "column"; // Stack info and tracker
+            div.style.flexDirection = "column";
             div.style.alignItems = "stretch";
 
-            // Map status to tracker steps (0-4)
             const statusMap = {
-                'reported': 0,
-                'pending': 0,
-                'accepted': 1,
-                'in_progress': 2,
-                'awaiting_confirmation': 3,
-                'closed': 4
+                'reported': 0, 'pending': 0, 'accepted': 1, 'in_progress': 2, 'awaiting_confirmation': 3, 'closed': 4
             };
             const currentStep = statusMap[req.status] || 0;
             const progressWidth = (currentStep / 4) * 100;
@@ -299,9 +170,7 @@ async function loadRequests() {
                         <div class="tracker_progress_bar" style="width: ${progressWidth}%"></div>
                         ${steps.map((step, index) => `
                             <div class="step ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}">
-                                <div class="step_icon">
-                                    <i class="fas ${step.icon}"></i>
-                                </div>
+                                <div class="step_icon"><i class="fas ${step.icon}"></i></div>
                                 <div class="step_label">${step.label}</div>
                             </div>
                         `).join('')}
@@ -317,7 +186,7 @@ async function loadRequests() {
                   <div class="action_buttons">
                       ${(req.status === 'reported' || req.status === 'pending') ?
                     `<button class="btn_sm btn_edit" onclick="editIncident('${req.id}')">Edit</button>
-                           <button class="btn_sm btn_delete" onclick="deleteIncident('${req.id}')">Cancel Request</button>`
+                         <button class="btn_sm btn_delete" onclick="deleteIncident('${req.id}')">Cancel Request</button>`
                     : ''}
                       ${req.status === 'awaiting_confirmation' ?
                     `<button class="btn_sm" style="background: var(--primary_blue); padding: 8px 15px;" onclick="confirmIncident('${req.id}', true)">Confirm Arrival / Safe</button>`
@@ -334,50 +203,73 @@ async function loadRequests() {
         });
     } catch (e) {
         console.error("Error loading requests:", e);
-        const list = document.getElementById("requestList");
-        list.innerHTML = `<p style='text-align:center; padding:20px; color:red;'>Error loading requests. Check if backend is running on port 8500.</p>`;
     }
 }
 
-// EDIT Function
+async function confirmIncident(id, confirmed) {
+    try {
+        const response = await fetch(`${apiBase}/api/users/incidents/${id}/confirm?confirmed=${confirmed}`, {
+            method: "PUT"
+        });
+        if (response.ok) {
+            alert(confirmed ? "Incident closed. Thank you!" : "Incident re-opened. We are re-assigning it.");
+            loadRequests();
+        }
+    } catch (e) { console.error(e); }
+}
+
+incidentForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const title = document.getElementById("select").value;
+    const full_address = locationInput.value;
+    const payload = {
+        title: title,
+        full_address: full_address,
+        latitude: currentLat,
+        longitude: currentLng,
+        reporter_id: user.id
+    };
+
+    try {
+        const response = await fetch(`${apiBase}/api/users/incidents`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+        });
+
+        if (response.ok) {
+            alert("Request submitted successfully!");
+            incidentForm.reset();
+            loadRequests();
+        } else {
+            const result = await response.json();
+            alert("Error: " + (result.detail || "Unknown error"));
+        }
+    } catch (error) { console.error(error); }
+});
+
 function editIncident(id) {
     window.location.href = `edit_incident.html?id=${id}`;
 }
 
-// DELETE Function
 async function deleteIncident(id) {
     if (!confirm("Are you sure you want to delete this request?")) return;
-
     try {
-        const response = await fetch(`/api/users/incidents/${id}?user_id=${user.id}`, {
-            method: "DELETE"
-        });
-
+        const response = await fetch(`${apiBase}/api/users/incidents/${id}?user_id=${user.id}`, { method: "DELETE" });
         if (response.ok) {
-            alert("Request deleted successfully");
-            loadRequests(); // Refresh list
-        } else {
-            const data = await response.json();
-            alert("Error deleting: " + (data.detail || "Unknown error"));
+            alert("Request deleted");
+            loadRequests();
         }
-    } catch (e) {
-        console.error("Delete error:", e);
-        alert("Failed to connect to server");
-    }
+    } catch (e) { console.error(e); }
 }
-loadRequests();
-setInterval(loadRequests, 5000); // Auto-refresh user requests every 5 seconds
 
-// --- Profile Sidebar Logic ---
-
+// Sidebar Logic
 function toggleProfile() {
     const sidebar = document.getElementById("profileSidebar");
     const overlay = document.getElementById("sidebarOverlay");
     sidebar.classList.toggle("active");
     overlay.classList.toggle("active");
-    if (sidebar.classList.contains("active")) {
-        loadProfileData();
-    }
+    if (sidebar.classList.contains("active")) loadProfileData();
 }
 
 function loadProfileData() {
@@ -388,49 +280,22 @@ function loadProfileData() {
     document.getElementById("userEmail").textContent = user.email || "No Email Found";
     document.getElementById("userRoleBadge").textContent = (user.role || 'User').toUpperCase();
 
-    // Profile Image
     if (user.profile_image) {
         const userImg = document.getElementById("userImg");
         const defaultIcon = document.getElementById("defaultIcon");
         let imgPath = user.profile_image;
         if (!imgPath.startsWith('http')) {
-            imgPath = `/api/${imgPath}`;
+            imgPath = `${apiBase}/${imgPath}`;
         }
         userImg.src = imgPath;
         userImg.classList.remove("hidden");
         defaultIcon.classList.add("hidden");
     }
 
-    // Modal populate
     document.getElementById("editUsername").value = user.username || "";
     document.getElementById("editEmail").value = user.email || "";
     document.getElementById("editAddress").value = user.address || "";
-
-    // Address display
     document.getElementById("userAddress").textContent = user.address || "Address not set";
-}
-
-function openEditModal() {
-    document.getElementById("editModal").classList.remove("hidden");
-}
-
-function closeEditModal() {
-    document.getElementById("editModal").classList.add("hidden");
-}
-
-function previewImage(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-            const userImg = document.getElementById("userImg");
-            const defaultIcon = document.getElementById("defaultIcon");
-            userImg.src = e.target.result;
-            userImg.classList.remove("hidden");
-            defaultIcon.classList.add("hidden");
-        }
-        reader.readAsDataURL(file);
-    }
 }
 
 document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
@@ -443,29 +308,25 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
     formData.append("address", document.getElementById("editAddress").value);
 
     const imageInput = document.getElementById("imageInput");
-    if (imageInput.files[0]) {
-        formData.append("image", imageInput.files[0]);
-    }
+    if (imageInput.files[0]) formData.append("image", imageInput.files[0]);
 
     try {
-        const res = await fetch("/api/users/profile/update", {
+        const res = await fetch(`${apiBase}/api/users/profile/update`, {
             method: "PUT",
             body: formData
         });
-
         if (res.ok) {
             const updatedUser = await res.json();
-            const newUser = { ...user, ...updatedUser };
-            localStorage.setItem("user", JSON.stringify(newUser));
-            alert("Profile updated successfully!");
-            closeEditModal();
-            loadProfileData(); // Refresh sidebar data
-        } else {
-            const errorData = await res.json();
-            alert(errorData.detail || "Failed to update profile.");
+            localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
+            alert("Profile updated!");
+            document.getElementById("editModal").classList.add("hidden");
+            loadProfileData();
         }
-    } catch (err) {
-        console.error(err);
-        alert("Server error. Try again.");
-    }
+    } catch (err) { console.error(err); }
 });
+
+function openEditModal() { document.getElementById("editModal").classList.remove("hidden"); }
+function closeEditModal() { document.getElementById("editModal").classList.add("hidden"); }
+
+loadRequests();
+setInterval(loadRequests, 5000);

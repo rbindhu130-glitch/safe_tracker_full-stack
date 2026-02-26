@@ -74,7 +74,11 @@ signupForm.addEventListener("submit", async (e) => {
     }
 
     try {
-        const response = await fetch("/api/users/signup", {
+        const apiBase = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
+            ? "http://127.0.0.1:8500"
+            : "";
+
+        const response = await fetch(`${apiBase}/api/users/signup`, {
             method: "POST",
             body: formData,
         });
