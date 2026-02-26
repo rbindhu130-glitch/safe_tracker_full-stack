@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About Us | SafeTracker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style/user.css">
+    <link rel="stylesheet" href="../style/static.css">
+    <link rel="stylesheet" href="../style/footer.css">
+</head>
+
+<body>
+    <header class="header_nav">
+        <a href="../index.html" id="logoLink" class="logo_nav">
+            <i class="fas fa-shield-halved"></i>
+            <h2>SafeTracker</h2>
+        </a>
+        <nav class="nav_links" id="navLinks">
+            <a href="about.html" class="nav_link">About Us</a>
+            <a href="contact.html" class="nav_link">Contact</a>
+        </nav>
+    </header>
+
+    <div class="static_container">
+        <div class="page_header">
+            <h1>Our Mission</h1>
+            <p>Empowering communities through technology and volunteerism to create a safer environment for everyone.
+            </p>
+        </div>
+
+        <section class="about_section">
+            <h2><i class="fas fa-bullseye"></i> Who We Are</h2>
+            <p>SafeTracker is a community-driven platform dedicated to enhancing personal safety. We believe that
+                everyone has the right to feel secure in their surroundings. By connecting individuals in need with
+                verified volunteers and providing real-time tracking, we bridge the gap between distress and assistance.
+            </p>
+        </section>
+
+        <div class="about_grid">
+            <div class="feature_card">
+                <i class="fas fa-user-check"></i>
+                <h3>Verified Helpers</h3>
+                <p>Every volunteer goes through a rigorous verification process to ensure the highest standards of
+                    safety and trust.</p>
+            </div>
+            <div class="feature_card">
+                <i class="fas fa-map-location-dot"></i>
+                <h3>Real-time Tracking</h3>
+                <p>Advanced GPS technology allows for precise location sharing and real-time support during critical
+                    moments.</p>
+            </div>
+            <div class="feature_card">
+                <i class="fas fa-users-rays"></i>
+                <h3>Community First</h3>
+                <p>A network built on mutual respect and the shared goal of protecting our neighborhoods.</p>
+            </div>
+        </div>
+
+        <section class="about_section" style="margin-top: 40px;">
+            <h2><i class="fas fa-heart"></i> Our Story</h2>
+            <p>Founded in 2024, SafeTracker started as a small project to help students walk safely across campus.
+                Today, it has grown into a comprehensive platform serving cities, helping thousands of users find peace
+                of mind through a dedicated network of volunteers.</p>
+        </section>
+    </div>
+    <!-- Right Sidebar Profile Panel -->
+    <div id="profileSidebar" class="profile_sidebar">
+        <button class="sidebar_close" onclick="toggleProfile()"><i class="fas fa-times"></i></button>
+        <div class="sidebar_content">
+            <div class="profile_header_inline">
+                <div class="profile_img_container" id="profileImgContainer">
+                    <i class="fas fa-user-circle" id="defaultIcon"></i>
+                    <img id="userImg" src="" alt="Profile Image" class="hidden">
+                    <div class="img_overlay" onclick="document.getElementById('imageInput').click()">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                </div>
+                <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="previewImage(event)">
+                <h2 id="userNameDisplay">User Name</h2>
+                <span id="userRoleBadge" class="role_badge">User</span>
+            </div>
+
+            <div class="profile_details_inline">
+                <div class="detail_item">
+                    <i class="fas fa-envelope"></i>
+                    <div>
+                        <label>Email Address</label>
+                        <p id="userEmail">email@example.com</p>
+                    </div>
+                </div>
+                <div id="addressSection" class="detail_item">
+                    <i class="fas fa-location-dot"></i>
+                    <div>
+                        <label>Base Location</label>
+                        <p id="userAddress">Address not set</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile_actions">
+                <button class="edit_btn" onclick="openEditModal()">Edit Profile</button>
+            </div>
+        </div>
+    </div>
+    <div id="sidebarOverlay" class="sidebar_overlay" onclick="toggleProfile()"></div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="modal_overlay hidden">
+        <div class="modal_content">
+            <h2>Edit Profile</h2>
+            <form id="editProfileForm">
+                <div class="form_group">
+                    <label>Username</label>
+                    <input type="text" id="editUsername" required>
+                </div>
+                <div class="form_group">
+                    <label>Email Address</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div id="editAddressGroup" class="form_group">
+                    <label>Base Location</label>
+                    <input type="text" id="editAddress">
+                </div>
+                <div class="modal_actions">
+                    <button type="button" class="btn_cancel" onclick="closeEditModal()">Cancel</button>
+                    <button type="submit" class="btn_save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script src="../js/about.js"></script>
+    <footer class="main_footer">
+        <div class="footer_content">
+            <div class="footer_section">
+                <a href="../index.html" class="footer_logo">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>SafeTracker</span>
+                </a>
+                <p>Your community safety companion. Empowering everyone to feel secure in their surroundings through
+                    volunteer-driven support.</p>
+            </div>
+            <div class="footer_section">
+                <h4>Quick Links</h4>
+                <ul class="footer_links">
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="signup.html">Sign Up</a></li>
+                </ul>
+            </div>
+            <div class="footer_section">
+                <h4>Support</h4>
+                <ul class="footer_links">
+                    <li><a href="contact.html">Help Center</a></li>
+                    <li><a href="mailto:safetracker2026@gmail.com">Email Support</a></li>
+                </ul>
+            </div>
+            <div class="footer_section">
+                <h4>Follow Us</h4>
+                <div class="social_links">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer_bottom">
+            <p>&copy; 2026 SafeTracker. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>

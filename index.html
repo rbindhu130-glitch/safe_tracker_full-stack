@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>index | safetracker</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="./style/index.css">
+  <link rel="stylesheet" href="./style/footer.css">
+</head>
+
+<body>
+  <header class="header_nav">
+    <a href="#" id="logoLink" class="logo_nav">
+      <i class="fas fa-shield-halved"></i>
+      <h2>SafeTracker</h2>
+    </a>
+    <nav class="nav_links" id="navLinks">
+      <a href="./pages/about.html" class="nav_link">About Us</a>
+      <a href="./pages/contact.html" class="nav_link">Contact</a>
+    </nav>
+  </header>
+
+  <div class="containar">
+    <div class="hero_logo">
+      <i class="fas fa-shield-halved"></i>
+      <h1>SafeTracker</h1>
+    </div>
+    <p class="subtitle">Choose your portal to continue</p>
+
+    <div class="portal_wrapper">
+      <a href="./pages/signup.html?role=user" class="card_role">
+        <div class="icon_box_circle">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <h2>User Portal</h2>
+        <p>I need safety assistance, escort services, or want to report an incident.</p>
+        <div class="btn_action">User</div>
+      </a>
+
+      <a href="./pages/signup.html?role=volunteer" class="card_role">
+        <div class="icon_box_circle">
+          <i class="fas fa-hands-holding-child"></i>
+        </div>
+        <h2>Volunteer Portal</h2>
+        <p>I want to help others, accept missions, and contribute to community safety.</p>
+        <div class="btn_action">Volunteer</div>
+      </a>
+    </div>
+  </div>
+
+  <footer class="main_footer">
+    <div class="footer_content">
+      <div class="footer_section">
+        <a href="#" class="footer_logo">
+          <i class="fas fa-shield-halved"></i>
+          <span>SafeTracker</span>
+        </a>
+        <p>Your community safety companion. Empowering everyone to feel secure in their surroundings through
+          volunteer-driven support.</p>
+      </div>
+      <div class="footer_section">
+        <h4>Quick Links</h4>
+        <ul class="footer_links">
+          <li><a href="./pages/about.html">About Us</a></li>
+          <li><a href="./pages/contact.html">Contact Us</a></li>
+          <li><a href="./pages/login.html">Login</a></li>
+          <li><a href="./pages/signup.html">Sign Up</a></li>
+        </ul>
+      </div>
+      <div class="footer_section">
+        <h4>Support</h4>
+        <ul class="footer_links">
+          <li><a href="./pages/contact.html">Help Center</a></li>
+          <li><a href="mailto:safetracker2026@gmail.com">Email Support</a></li>
+        </ul>
+      </div>
+      <div class="footer_section">
+        <h4>Follow Us</h4>
+        <div class="social_links">
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer_bottom">
+      <p>&copy; 2026 SafeTracker. All rights reserved.</p>
+    </div>
+  </footer>
+  <!-- Right Sidebar Profile Panel -->
+  <div id="profileSidebar" class="profile_sidebar">
+    <button class="sidebar_close" onclick="toggleProfile()"><i class="fas fa-times"></i></button>
+    <div class="sidebar_content">
+      <div class="profile_header_inline">
+        <div class="profile_img_container" id="profileImgContainer">
+          <i class="fas fa-user-circle" id="defaultIcon"></i>
+          <img id="userImg" src="" alt="Profile Image" class="hidden">
+          <div class="img_overlay" onclick="document.getElementById('imageInput').click()">
+            <i class="fas fa-camera"></i>
+          </div>
+        </div>
+        <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="previewImage(event)">
+        <h2 id="userNameDisplay">User Name</h2>
+        <span id="userRoleBadge" class="role_badge">User</span>
+      </div>
+
+      <div class="profile_details_inline">
+        <div class="detail_item">
+          <i class="fas fa-envelope"></i>
+          <div>
+            <label>Email Address</label>
+            <p id="userEmail">email@example.com</p>
+          </div>
+        </div>
+        <div id="addressSection" class="detail_item">
+          <i class="fas fa-location-dot"></i>
+          <div>
+            <label>Base Location</label>
+            <p id="userAddress">Address not set</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile_actions">
+        <button class="edit_btn" onclick="openEditModal()">Edit Profile</button>
+      </div>
+    </div>
+  </div>
+  <div id="sidebarOverlay" class="sidebar_overlay" onclick="toggleProfile()"></div>
+
+  <!-- Edit Profile Modal -->
+  <div id="editModal" class="modal_overlay hidden">
+    <div class="modal_content">
+      <h2>Edit Profile</h2>
+      <form id="editProfileForm">
+        <div class="form_group">
+          <label>Username</label>
+          <input type="text" id="editUsername" required>
+        </div>
+        <div class="form_group">
+          <label>Email Address</label>
+          <input type="email" id="editEmail" required>
+        </div>
+        <div id="editAddressGroup" class="form_group">
+          <label>Base Location</label>
+          <input type="text" id="editAddress">
+        </div>
+        <div class="modal_actions">
+          <button type="button" class="btn_cancel" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn_save">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="./js/index.js"></script>
+</body>
+
+</html>

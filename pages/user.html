@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SafeTracker | User</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="../style/user.css" />
+  <link rel="stylesheet" href="../style/footer.css">
+</head>
+
+<body>
+  <header class="header_nav">
+    <a href="user.html" class="logo_nav">
+      <i class="fas fa-shield-halved"></i>
+      <h2>SafeTracker</h2>
+    </a>
+    <nav class="nav_links">
+      <a href="javascript:void(0)" onclick="toggleProfile()" class="nav_link">My Profile</a>
+      <a href="about.html" class="nav_link">About Us</a>
+      <a href="contact.html" class="nav_link">Contact</a>
+      <a href="../index.html" class="nav_link">Logout</a>
+    </nav>
+  </header>
+
+  <img src="../assets/background.png" alt="Banner" class="img" />
+
+  <div class="main_container">
+    <div class="request_box">
+      <h2><i class="fas fa-hand-holding-heart"></i> Request Help</h2>
+
+      <form id="incidentForm">
+        <label for="location">Current Location:</label>
+        <input type="text" id="location" name="location" placeholder="Your address will appear here..." required />
+        <button type="button" class="get_map_btn">Get Map</button>
+
+        <div class="map_wrapper">
+          <div id="map" style="width: 100%; height: 250px; border-radius: 10px;"></div>
+        </div>
+        <label for="select" class="incident_type">Select Incident Type:</label>
+        <select id="select" name="select" class="incident_type">
+          <option value="security">Security Escort</option>
+          <option value="safe">Safe Passage</option>
+          <option value="emergency">Emergency Help</option>
+        </select>
+        <button type="submit" class="submit">Submit Request</button>
+      </form>
+    </div>
+    <div class="request">
+      <section class="card">
+        <h2><i class="fas fa-clock-rotate-left"></i> Requests</h2>
+
+        <div class="request_list" id="requestList">
+          <!-- Incidents will load here -->
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Right Sidebar Profile Panel -->
+  <div id="profileSidebar" class="profile_sidebar">
+    <button class="sidebar_close" onclick="toggleProfile()"><i class="fas fa-times"></i></button>
+    <div class="sidebar_content">
+      <div class="profile_header_inline">
+        <div class="profile_img_container" id="profileImgContainer">
+          <i class="fas fa-user-circle" id="defaultIcon"></i>
+          <img id="userImg" src="" alt="Profile Image" class="hidden">
+          <div class="img_overlay" onclick="document.getElementById('imageInput').click()">
+            <i class="fas fa-camera"></i>
+          </div>
+        </div>
+        <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="previewImage(event)">
+        <h2 id="userNameDisplay">User Name</h2>
+        <span id="userRoleBadge" class="role_badge">User</span>
+      </div>
+
+      <div class="profile_details_inline">
+        <div class="detail_item">
+          <i class="fas fa-envelope"></i>
+          <div>
+            <label>Email Address</label>
+            <p id="userEmail">email@example.com</p>
+          </div>
+        </div>
+        <div id="addressSection" class="detail_item">
+          <i class="fas fa-location-dot"></i>
+          <div>
+            <label>Base Location</label>
+            <p id="userAddress">Address not set</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile_actions">
+        <button class="edit_btn" onclick="openEditModal()">Edit Profile</button>
+      </div>
+    </div>
+  </div>
+  <div id="sidebarOverlay" class="sidebar_overlay" onclick="toggleProfile()"></div>
+
+  <!-- Edit Profile Modal -->
+  <div id="editModal" class="modal_overlay hidden">
+    <div class="modal_content">
+      <h2>Edit Profile</h2>
+      <form id="editProfileForm">
+        <div class="form_group">
+          <label>Username</label>
+          <input type="text" id="editUsername" required>
+        </div>
+        <div class="form_group">
+          <label>Email Address</label>
+          <input type="email" id="editEmail" required>
+        </div>
+        <div id="editAddressGroup" class="form_group">
+          <label>Base Location</label>
+          <input type="text" id="editAddress">
+        </div>
+        <div class="modal_actions">
+          <button type="button" class="btn_cancel" onclick="closeEditModal()">Cancel</button>
+          <button type="submit" class="btn_save">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="../js/user.js"></script>
+  <footer class="main_footer">
+    <div class="footer_content">
+      <div class="footer_section">
+        <a href="../index.html" class="footer_logo">
+          <i class="fas fa-shield-halved"></i>
+          <span>SafeTracker</span>
+        </a>
+        <p>Your community safety companion. Empowering everyone to feel secure in their surroundings through
+          volunteer-driven support.</p>
+      </div>
+      <div class="footer_section">
+        <h4>Quick Links</h4>
+        <ul class="footer_links">
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+          <li><a href="login.html">Login</a></li>
+          <li><a href="signup.html">Sign Up</a></li>
+        </ul>
+      </div>
+      <div class="footer_section">
+        <h4>Support</h4>
+        <ul class="footer_links">
+          <li><a href="contact.html">Help Center</a></li>
+          <li><a href="mailto:safetracker2026@gmail.com">Email Support</a></li>
+        </ul>
+      </div>
+      <div class="footer_section">
+        <h4>Follow Us</h4>
+        <div class="social_links">
+          <a href="#"><i class="fab fa-instagram"></i></a>
+          <a href="#"><i class="fab fa-linkedin"></i></a>
+          <a href="#"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer_bottom">
+      <p>&copy; 2026 SafeTracker. All rights reserved.</p>
+    </div>
+  </footer>
+</body>
+
+</html>

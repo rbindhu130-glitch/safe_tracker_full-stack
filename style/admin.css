@@ -1,0 +1,223 @@
+:root {
+  --admin-primary: #0f172a;
+  --admin-secondary: #3b82f6;
+  --admin-bg: #f8fafc;
+  --admin-card-bg: #ffffff;
+  --admin-text-main: #1e293b;
+  --admin-text-muted: #64748b;
+  --admin-border: #e2e8f0;
+  --status-pending: #f59e0b;
+  --status-active: #3b82f6;
+  --status-closed: #10b981;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'poppins', sans-serif;
+}
+
+body {
+  background-color: var(--admin-bg);
+  color: var(--admin-text-main);
+}
+
+.admin_dashboard {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar Styling */
+.admin_sidebar {
+  width: 280px;
+  background-color: var(--admin-primary);
+  color: white;
+  padding: 30px 20px;
+  position: fixed;
+  height: 100vh;
+}
+
+.admin_sidebar h2 {
+  font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 40px;
+}
+
+.admin_nav_link {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #94a3b8;
+  text-decoration: none;
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: all 0.3s;
+}
+
+.admin_nav_link:hover, .admin_nav_link.active {
+  background-color: var(--admin-secondary);
+  color: white;
+}
+
+/* Main Content Area */
+.admin_main {
+  flex: 1;
+  margin-left: 280px;
+  padding: 40px;
+}
+
+.admin_header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.stats_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.stat_card {
+  background: white;
+  padding: 25px;
+  border-radius: 20px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.stat_icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 24px;
+}
+
+.stat_info h3 {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.stat_info p {
+  color: var(--admin-text-muted);
+  font-size: 14px;
+}
+
+.icon_blue { background: #dbeafe; color: #2563eb; }
+.icon_yellow { background: #fef3c7; color: #d97706; }
+.icon_red { background: #fee2e2; color: #dc2626; }
+
+.hidden { display: none !important; }
+
+/* Table Designs */
+.data_section {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  margin-bottom: 40px;
+}
+
+.data_section h2 {
+    margin-bottom: 25px;
+    font-size: 22px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  text-align: left;
+  padding: 15px;
+  color: var(--admin-text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+td {
+  padding: 15px;
+  border-bottom: 1px solid var(--admin-border);
+  font-size: 14px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge_user { background: #dcfce7; color: #16a34a; }
+.badge_volunteer { background: #dbeafe; color: #2563eb; }
+.badge_pending { background: #fff7ed; color: #ea580c; }
+.badge_approved { background: #f0fdf4; color: #16a34a; }
+.badge_reported { background: #fee2e2; color: #dc2626; }
+
+.action_btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: 0.2s;
+}
+
+.btn_view { background: #3b82f6; color: white; }
+.btn_approve { background: #10b981; color: white; margin-left: 5px; }
+.btn_delete { background: #ef4444; color: white; margin-left: 5px; }
+
+/* Modal System */
+.modal_overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal_content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+}
+
+.modal_content img {
+    max-width: 100%;
+    max-height: 400px;
+    border-radius: 12px;
+    margin-top: 15px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.admin_logout {
+    margin-top: auto;
+    color: #ef4444;
+}
+
+@media (max-width: 1024px) {
+    .admin_sidebar { width: 80px; padding: 30px 10px; }
+    .admin_sidebar span, .admin_sidebar h2 span { display: none; }
+    .admin_main { margin-left: 80px; }
+}

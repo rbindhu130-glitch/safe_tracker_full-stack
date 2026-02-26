@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Incident - SafeTracker</title>
+    <link rel="stylesheet" href="../style/user.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="../style/footer.css">
+</head>
+
+<body>
+    <nav class="header_nav">
+        <a href="user.html" class="logo_nav">
+            <i class="fas fa-shield-alt"></i>
+            <h2>SafeTracker</h2>
+        </a>
+        <div class="nav_links">
+            <a href="about.html" class="nav_link">About Us</a>
+            <a href="contact.html" class="nav_link">Contact</a>
+            <a href="user.html" class="nav_link">Dashboard</a>
+            <a href="../index.html" class="nav_link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main_container edit_container">
+        <div class="request_box">
+            <h2>Edit Incident</h2>
+            <form id="editForm">
+                <input type="hidden" id="incidentId">
+
+                <label for="select">Incident Type</label>
+                <select id="select" required>
+                    <option value="" disabled selected>Select Incident Type</option>
+                    <option value="security">Security Escort</option>
+                    <option value="safe">Safe Passage</option>
+                    <option value="emergency">Emergency Help</option>
+                </select>
+
+                <label for="location">Location</label>
+                <div class="flex_gap">
+                    <input type="text" id="location" placeholder="Enter address or use GPS" required>
+                    <button type="button" class="get_map_btn" title="Update GPS Location">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </button>
+                </div>
+
+                <div class="map_wrapper map_wrapper_edit">
+                    <iframe src="https://maps.google.com/maps?q=13.0827,80.2707&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                        frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe>
+                </div>
+
+                <div class="edit_actions">
+                    <button type="button" class="btn_sm btn_delete"
+                        onclick="window.location.href='user.html'">Cancel</button>
+                    <button type="submit" class="submit">Update Request</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../js/edit_incident.js"></script>
+    <footer class="main_footer">
+        <div class="footer_content">
+            <div class="footer_section">
+                <a href="../index.html" class="footer_logo">
+                    <i class="fas fa-shield-halved"></i>
+                    <span>SafeTracker</span>
+                </a>
+                <p>Your community safety companion. Empowering everyone to feel secure in their surroundings through
+                    volunteer-driven support.</p>
+            </div>
+            <div class="footer_section">
+                <h4>Quick Links</h4>
+                <ul class="footer_links">
+                    <li><a href="about.html">About Us</a></li>
+                    <li><a href="contact.html">Contact Us</a></li>
+                    <li><a href="login.html">Login</a></li>
+                    <li><a href="signup.html">Sign Up</a></li>
+                </ul>
+            </div>
+            <div class="footer_section">
+                <h4>Support</h4>
+                <ul class="footer_links">
+                    <li><a href="contact.html">Help Center</a></li>
+                    <li><a href="mailto:safetracker2026@gmail.com">Email Support</a></li>
+                </ul>
+            </div>
+            <div class="footer_section">
+                <h4>Follow Us</h4>
+                <div class="social_links">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer_bottom">
+            <p>&copy; 2026 SafeTracker. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
