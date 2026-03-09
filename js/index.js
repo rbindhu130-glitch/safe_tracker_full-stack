@@ -2,10 +2,9 @@
 const navLinks = document.getElementById('navLinks');
 const loggedUser = JSON.parse(localStorage.getItem("user"));
 
-// Helper to get API Base URL
 const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
     ? "http://127.0.0.1:8500"
-    : "";
+    : window.location.origin;
 
 
 if (navLinks) {
