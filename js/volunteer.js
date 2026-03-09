@@ -10,8 +10,31 @@ if (!user || user.role !== "volunteer") {
 }
 
 let isProcessing = false;
-
 let mapInstances = {};
+
+let vLat = null;
+let vLng = null;
+let vWatchId = null;
+
+if (navigator.geolocation) {
+  vWatchId = navigator.geolocation.watchPosition((pos) => {
+    vLat = pos.coords.latitude;
+    vLng = pos.coords.longitude;
+  }, (err) => console.error("Volunteer GPS error", err), { enableHighAccuracy: true });
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return (R * c).toFixed(1);
+}
+
 
 async function loadIncidents() {
   try {
@@ -61,28 +84,33 @@ async function loadIncidents() {
             `;
         liveList.appendChild(div);
       }
-      else if ((incident.status === "accepted" || incident.status === "in_progress") && incident.volunteer_id == user.id) {
+      else if (incident.status === "in_progress" && incident.volunteer_id == user.id) {
         const div = document.createElement("div");
         div.className = "request";
 
         let actionBtn = "";
-        if (incident.status === "accepted") {
-          actionBtn = `<span class="incident_status" style="background:var(--primary_blue)" onclick="updateStatus(${incident.id}, 'start')">Start Heading There</span>`;
-        } else if (incident.status === "in_progress") {
-          actionBtn = `<span class="incident_status" style="background:#16a34a" onclick="updateStatus(${incident.id}, 'complete')">I Have Arrived</span>`;
+        if (incident.status === "in_progress") {
+          actionBtn = `<span class="incident_status" style="background:#16a34a" onclick="updateStatus(${incident.id}, 'complete')">Mark as Completed</span>`;
         }
 
         const mapId = `map_${incident.id}`;
+
+        let distHtml = "";
+        if (vLat && vLng && incident.latitude && incident.longitude) {
+          const dist = getDistance(vLat, vLng, incident.latitude, incident.longitude);
+          if (dist !== null) {
+            distHtml = `<p style="color:#059669; font-size:15px; margin-bottom:4px; font-weight:bold;">📍 User is ${dist} km away</p>`;
+          }
+        }
+
         div.innerHTML = `
                <div class="request_row">
                  <div class="request_info">
                    <p class="request_title">${incident.title} (${incident.status.replace('_', ' ')})</p>
                    <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
+                   ${distHtml}
                    <p class="request_meta">${incident.full_address || 'No location'}</p>
                    <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
-                   <a href="https://www.google.com/maps?q=${incident.latitude && incident.longitude ? incident.latitude + ',' + incident.longitude : encodeURIComponent(incident.full_address || '')}" target="_blank" style="display:block; margin-top:8px; color:var(--primary_blue); font-size:13px; text-decoration:none;">
-                     <i class="fas fa-external-link-alt"></i> Open in Google Maps
-                   </a>
                  </div>
                  ${actionBtn}
                </div>
@@ -95,6 +123,30 @@ async function loadIncidents() {
           const vmap = L.map(mapId).setView([lat, lng], 15);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(vmap);
           L.marker([lat, lng]).addTo(vmap);
+
+          if (vLat && vLng) {
+            const vIcon = L.divIcon({
+              className: 'custom-div-icon',
+              html: "<div style='background-color:#059669; width:16px; height:16px; border-radius:50%; border:2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);'></div>",
+              iconSize: [20, 20],
+              iconAnchor: [10, 10]
+            });
+            L.marker([vLat, vLng], { icon: vIcon }).addTo(vmap).bindPopup("Your Location");
+
+            // Draw a line connecting Volunteer and User
+            const routeLine = L.polyline([
+              [lat, lng],
+              [vLat, vLng]
+            ], {
+              color: '#2563eb', // primary blue
+              weight: 4,
+              opacity: 0.7,
+              dashArray: '10, 10'
+            }).addTo(vmap);
+
+            vmap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+          }
+
           mapInstances[mapId] = vmap;
         } catch (mapErr) {
           console.error("Map init error:", mapErr);

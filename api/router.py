@@ -288,9 +288,7 @@ def accept_incident(incident_id: int, volunteer_id: int, db: Session = Depends(g
     if incident.volunteer_id:
         raise HTTPException(status_code=400, detail="Incident already assigned")
     incident.volunteer_id = volunteer_id
-    incident.status = (
-        "in_progress"  # User wants to see 'In Progress' immediately after acceptance
-    )
+    incident.status = "in_progress"
     db.commit()
     return {"message": "Incident accepted and started"}
 

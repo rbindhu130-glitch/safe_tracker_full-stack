@@ -24,6 +24,7 @@ let marker = null;
 let currentLat = null;
 let currentLng = null;
 let editingId = null;
+let activeIncidentIds = [];
 
 async function reverseGeocode(lat, lng) {
     try {
@@ -104,6 +105,15 @@ function updatePositionData(position) {
     }
 
     reverseGeocode(currentLat, currentLng);
+
+    // Send live location update to DB for active incidents
+    if (activeIncidentIds && activeIncidentIds.length > 0) {
+        activeIncidentIds.forEach(id => {
+            fetch(`${apiBase}/api/users/incidents/${id}/live-location?lat=${currentLat}&lng=${currentLng}`, {
+                method: 'PUT'
+            }).catch(e => console.error("Live coord update error:", e));
+        });
+    }
 }
 
 function handleGPSError(error) {
@@ -141,9 +151,15 @@ async function loadRequests() {
             return;
         }
 
+        let activeIds = [];
+
         data.reverse().forEach((req) => {
             const visibleStatuses = ['reported', 'pending', 'awaiting_confirmation', 'closed', 'in_progress', 'accepted'];
             if (!visibleStatuses.includes(req.status)) return;
+
+            if (['reported', 'pending', 'accepted', 'in_progress'].includes(req.status)) {
+                activeIds.push(req.id);
+            }
 
             const div = document.createElement("div");
             div.className = "request_item";
@@ -163,15 +179,29 @@ async function loadRequests() {
                         <i class="fas fa-times-circle"></i>
                      </button>`
                     : ''}
+                   ${(req.status === 'awaiting_confirmation') ?
+                    `<div style="display:flex; gap:5px; margin-top:5px;">
+                       <button title="Confirm Completion" onclick="confirmIncident('${req.id}', true)" style="background: #059669; border: none; color: white; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                           ✔️ Confirm
+                       </button>
+                       <button title="Not Completed" onclick="confirmIncident('${req.id}', false)" style="background: #dc2626; border: none; color: white; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 14px; font-weight: bold;">
+                           ❌ No
+                       </button>
+                     </div>`
+                    : ''}
                 </div>
               </div>
             `;
             list.appendChild(div);
         });
+
+        activeIncidentIds = activeIds;
     } catch (e) {
         console.error("Error loading requests:", e);
     }
 }
+
+
 
 async function confirmIncident(id, confirmed) {
     try {
