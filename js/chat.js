@@ -4,77 +4,83 @@ const chat_isLocal = chat_hostname === "127.0.0.1" || chat_hostname === "localho
 const chat_apiBase = chat_isLocal ? `http://${chat_hostname}:8501` : "";
 const chat_user = JSON.parse(localStorage.getItem("user"));
 
-let chatSocket = null;
 let currentChatIncidentId = null;
+let chatPollInterval = null;
+let lastMessageId = 0;
+let isFetchingChat = false;
 
 function openChat(incidentId, title) {
     currentChatIncidentId = incidentId;
+    lastMessageId = 0; // Reset for new chat
 
     document.getElementById("chatTitle").innerHTML = `<i class="fas fa-comments"></i> Chat: ${title}`;
     document.getElementById("chatModal").classList.add("active");
-    document.getElementById("chatBody").innerHTML = "<p style='text-align:center; color:#64748b; font-size:12px;'>Connecting...</p>";
 
-    // Load history
-    fetch(`${chat_apiBase}/api/users/incidents/${incidentId}/chat`)
-        .then(res => res.json())
-        .then(messages => {
-            const chatBody = document.getElementById("chatBody");
-            chatBody.innerHTML = "";
-            if (messages.length === 0) {
-                chatBody.innerHTML = "<p style='text-align:center; color:#64748b; font-size:14px; margin-top:20px;'>No chat history available.</p>";
-            } else {
-                messages.forEach(msg => appendMessage(msg));
-                setTimeout(scrollToBottom, 100);
-            }
-        });
+    const chatBody = document.getElementById("chatBody");
+    chatBody.innerHTML = "<p id='loadingChat' style='text-align:center; color:#64748b; font-size:12px;'>Loading history...</p>";
 
-    // WebSocket Connection
-    // Replace http/https with ws/wss
-    const wsProto = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsHost = chat_isLocal ? `${chat_hostname}:8501` : window.location.host;
+    // Immediate fetch
+    fetchChatHistory();
 
-    if (chatSocket) chatSocket.close();
-
-    // Connect with the persistent user.id from the local variable
-    chatSocket = new WebSocket(`${wsProto}//${wsHost}/ws/chat/${incidentId}/${chat_user.id}`);
-
-    chatSocket.onopen = () => {
-        console.log("WebSocket connected to incident:", incidentId);
-        document.getElementById("chatBody").innerHTML += "<p style='text-align:center; color:#10b981; font-size:10px;'>Connected</p>";
-    };
-
-    chatSocket.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        console.log("WebSocket message received:", msg);
-        appendMessage(msg);
-        scrollToBottom();
-    };
-
-    chatSocket.onclose = (event) => {
-        console.log("Chat disconnected", event);
-        document.getElementById("chatBody").innerHTML += `<p style='text-align:center; color:#ef4444; font-size:10px;'>Disconnected (Code: ${event.code})</p>`;
-    };
-    chatSocket.onerror = (err) => console.error("Chat error", err);
+    // Start polling every 3 seconds
+    if (chatPollInterval) clearInterval(chatPollInterval);
+    chatPollInterval = setInterval(fetchChatHistory, 3000);
 }
 
 function closeChat() {
-    if (chatSocket) chatSocket.close();
+    if (chatPollInterval) clearInterval(chatPollInterval);
+    currentChatIncidentId = null;
     document.getElementById("chatModal").classList.remove("active");
     document.getElementById("chatBody").innerHTML = "";
+}
+
+async function fetchChatHistory() {
+    if (!currentChatIncidentId || isFetchingChat) return;
+
+    isFetchingChat = true;
+    try {
+        const res = await fetch(`${chat_apiBase}/api/users/incidents/${currentChatIncidentId}/chat`);
+        if (!res.ok) throw new Error("Failed to fetch chat");
+        const messages = await res.json();
+
+        const chatBody = document.getElementById("chatBody");
+        const loadingEl = document.getElementById("loadingChat");
+        if (loadingEl) loadingEl.remove();
+
+        if (messages.length === 0 && chatBody.children.length === 0) {
+            chatBody.innerHTML = "<p id='noHistoryMsg' style='text-align:center; color:#64748b; font-size:14px; margin-top:20px;'>No chat history available.</p>";
+            isFetchingChat = false;
+            return;
+        }
+
+        const noHistoryEls = chatBody.querySelectorAll('#noHistoryMsg');
+        if (messages.length > 0 && noHistoryEls.length > 0) {
+            noHistoryEls.forEach(el => el.remove());
+        }
+
+        let newMessagesFound = false;
+        messages.forEach(msg => {
+            if (msg.id > lastMessageId) {
+                appendMessage(msg);
+                lastMessageId = msg.id; // Update last processed message ID
+                newMessagesFound = true;
+            }
+        });
+
+        if (newMessagesFound) {
+            scrollToBottom();
+        }
+    } catch (err) {
+        console.error("Chat polling error:", err);
+    } finally {
+        isFetchingChat = false;
+    }
 }
 
 function appendMessage(msg) {
     const chatBody = document.getElementById("chatBody");
 
-    // Clear "No chat history" placeholder if it exists
-    if (chatBody.innerHTML.includes("No chat history available.")) {
-        chatBody.innerHTML = "";
-    }
-
     const div = document.createElement("div");
-
-    // Use the global 'user' variable loaded at page start
-    // This prevents shared localStorage bugs if user opens two tabs
     const isMe = String(msg.sender_id) === String(chat_user.id);
 
     div.className = `message ${isMe ? 'message_sent' : 'message_received'}`;
@@ -86,30 +92,41 @@ function appendMessage(msg) {
 }
 
 function scrollToBottom() {
-    const chatBody = document.getElementById("chatBody");
-    chatBody.scrollTop = chatBody.scrollHeight;
+    setTimeout(() => {
+        const chatBody = document.getElementById("chatBody");
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }, 50);
 }
 
-document.getElementById("chatForm")?.addEventListener("submit", (e) => {
+document.getElementById("chatForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = document.getElementById("chatInput");
-    console.log("Chat form submitted. Message:", input.value.trim());
+    const msgText = input.value.trim();
+    if (!msgText || !currentChatIncidentId) return;
 
-    if (!input.value.trim()) return;
+    // Optimistic clear
+    input.value = "";
 
-    if (!chatSocket || chatSocket.readyState !== WebSocket.OPEN) {
-        console.error("Chat Socket is not open! Current state:", chatSocket ? chatSocket.readyState : "null");
-        alert("Chat connection is lost. Opening again...");
-        openChat(currentChatIncidentId, document.getElementById("chatTitle").innerText.replace(" Chat: ", ""));
-        return;
-    }
+    const payload = {
+        message: msgText,
+        incident_id: currentChatIncidentId,
+        sender_id: chat_user.id
+    };
 
     try {
-        const payload = JSON.stringify({ message: input.value.trim() });
-        console.log("Sending payload:", payload);
-        chatSocket.send(payload);
-        input.value = "";
+        const res = await fetch(`${chat_apiBase}/api/users/incidents/${currentChatIncidentId}/chat`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("Failed to send message");
+        // Force an immediate poll to show the message instantly
+        fetchChatHistory();
     } catch (err) {
         console.error("Error sending message:", err);
+        alert("Could not send message. Please try again.");
     }
 });

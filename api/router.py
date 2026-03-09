@@ -547,3 +547,23 @@ def get_chat_messages(incident_id: int, db: Session = Depends(get_db)):
         m_data.sender_name = msg.sender.username if msg.sender else "Unknown"
         response.append(m_data)
     return response
+
+
+@router.post(
+    "/incidents/{incident_id}/chat", response_model=schemas.ChatMessageResponse
+)
+def post_chat_message(
+    incident_id: int, chat: schemas.ChatMessageCreate, db: Session = Depends(get_db)
+):
+    db_msg = ChatMessage(
+        incident_id=incident_id,
+        sender_id=chat.sender_id,
+        message=chat.message,
+    )
+    db.add(db_msg)
+    db.commit()
+    db.refresh(db_msg)
+
+    m_data = schemas.ChatMessageResponse.model_validate(db_msg)
+    m_data.sender_name = db_msg.sender.username if db_msg.sender else "Unknown"
+    return m_data
