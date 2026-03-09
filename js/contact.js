@@ -50,7 +50,8 @@ function loadProfileData() {
         const userImg = document.getElementById("userImg");
         const defaultIcon = document.getElementById("defaultIcon");
         let imgPath = user.profile_image;
-        const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://127.0.0.1:8500" : "";
+        const hn = window.location.hostname;
+        const apiBase = (hn === "127.0.0.1" || hn === "localhost" || hn.startsWith("192.168.") || hn.startsWith("10.") || hn.startsWith("172.")) ? `http://${hn}:8500` : "";
         if (!imgPath.startsWith('http')) {
             // Locally, the files are served at /uploads, not /api/uploads
             imgPath = `${apiBase}/${imgPath}`;
@@ -107,7 +108,8 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
     }
 
     try {
-        const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://127.0.0.1:8500" : "";
+        const hn = window.location.hostname;
+        const apiBase = (hn === "127.0.0.1" || hn === "localhost" || hn.startsWith("192.168.") || hn.startsWith("10.") || hn.startsWith("172.")) ? `http://${hn}:8500` : "";
         const res = await fetch(`${apiBase}/api/users/profile/update`, {
             method: "PUT",
             body: formData
@@ -168,7 +170,8 @@ if (contactForm) {
         };
 
         try {
-            const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") ? "http://127.0.0.1:8500" : "";
+            const hn = window.location.hostname;
+            const apiBase = (hn === "127.0.0.1" || hn === "localhost" || hn.startsWith("192.168.") || hn.startsWith("10.") || hn.startsWith("172.")) ? `http://${hn}:8500` : "";
             const response = await fetch(`${apiBase}/api/users/complaints`, {
                 method: "POST",
                 headers: {

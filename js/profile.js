@@ -1,9 +1,9 @@
 const user = JSON.parse(localStorage.getItem("user"));
 
 // Helper to get API Base URL
-const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
-    ? "http://127.0.0.1:8500"
-    : "";
+const hostname = window.location.hostname;
+const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
+const apiBase = isLocal ? `http://${hostname}:8500` : "";
 
 
 if (!user) {

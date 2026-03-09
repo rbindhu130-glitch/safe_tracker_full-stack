@@ -6,9 +6,9 @@ loginForm.addEventListener("submit", async (e) => {
     const formData = new FormData(loginForm);
 
     try {
-        const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
-            ? "http://127.0.0.1:8500"
-            : window.location.origin;
+        const hostname = window.location.hostname;
+        const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
+        const apiBase = isLocal ? `http://${hostname}:8500` : window.location.origin;
 
         const response = await fetch(`${apiBase}/api/users/login`, {
             method: "POST",
