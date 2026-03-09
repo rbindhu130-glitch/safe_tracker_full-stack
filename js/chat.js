@@ -114,6 +114,9 @@ function scrollToBottom() {
 document.getElementById("chatForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const input = document.getElementById("chatInput");
+
+    if (input.disabled) return; // Prevent sending if input is disabled (chat closed)
+
     const msgText = input.value.trim();
     if (!msgText || !currentChatIncidentId) return;
 
