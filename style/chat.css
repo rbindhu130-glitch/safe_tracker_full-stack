@@ -1,0 +1,122 @@
+.chat_modal {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    height: 450px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: 'Inter', sans-serif;
+    border: 1px solid #e2e8f0;
+}
+
+.chat_modal.active {
+    display: flex;
+}
+
+.chat_header {
+    background: #1e3a8a;
+    color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat_header h3 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.chat_body {
+    flex: 1;
+    padding: 15px;
+    overflow-y: auto;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat_footer {
+    padding: 10px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 10px;
+}
+
+.chat_footer input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    outline: none;
+}
+
+.chat_footer button {
+    background: #1e3a8a;
+    color: white;
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+    position: relative;
+}
+
+.message_sent {
+    align-self: flex-end;
+    background: #dbeafe;
+    color: #1e3a8a;
+    border-bottom-right-radius: 2px;
+}
+
+.message_received {
+    align-self: flex-start;
+    background: white;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-bottom-left-radius: 2px;
+}
+
+.message_info {
+    font-size: 10px;
+    margin-bottom: 4px;
+    display: block;
+    font-weight: bold;
+}
+
+.chat_btn {
+    background: #1e3a8a;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.2s;
+}
+
+.chat_btn:hover {
+    background: #1d4ed8;
+}

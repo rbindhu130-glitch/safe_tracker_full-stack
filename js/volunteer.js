@@ -109,8 +109,11 @@ async function loadIncidents() {
                    <p class="request_title">${incident.title} (${incident.status.replace('_', ' ')})</p>
                    <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
                    ${distHtml}
-                   <p class="request_meta">${incident.full_address || 'No location'}</p>
-                   <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
+                    <p class="request_meta">${incident.full_address || 'No location'}</p>
+                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}')">
+                        <i class="fas fa-comments"></i> Chat with User
+                    </button>
+                    <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
                  </div>
                  ${actionBtn}
                </div>
@@ -162,7 +165,11 @@ async function loadIncidents() {
               <div>
                 <p><strong>${incident.title}</strong></p>
                 <p style="font-size:13px">User: ${incident.reporter_name || 'Anonymous'}</p>
-                <p style="font-size:13px; color:${statusColor}">Status: ${displayStatus.replace('_', ' ').toUpperCase()}</p>
+                   <span class="status_badge status_${incident.status}">${incident.status.replace('_', ' ').toUpperCase()}</span>
+                   ${(['accepted', 'in_progress', 'awaiting_confirmation'].includes(incident.status)) ?
+            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}')" style="margin-top:5px;">
+                        <i class="fas fa-comments"></i> Chat
+                     </button>` : ''}
               </div>
               <div class="status" style="background:${statusColor}">${incident.status.toUpperCase()}</div>
             `;

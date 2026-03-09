@@ -106,3 +106,22 @@ class ComplaintResponse(ComplaintCreate):
 
     class Config:
         from_attributes = True
+
+
+class ChatMessageBase(BaseModel):
+    message: str
+    incident_id: int
+    sender_id: int
+
+
+class ChatMessageCreate(ChatMessageBase):
+    pass
+
+
+class ChatMessageResponse(ChatMessageBase):
+    id: int
+    timestamp: datetime
+    sender_name: Optional[str] = None
+
+    class Config:
+        from_attributes = True

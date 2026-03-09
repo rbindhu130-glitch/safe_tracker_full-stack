@@ -49,6 +49,22 @@ class Incident(Base):
     volunteer = relationship(
         "User", back_populates="incidents_accepted", foreign_keys=[volunteer_id]
     )
+    messages = relationship(
+        "ChatMessage", back_populates="incident", cascade="all, delete-orphan"
+    )
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(Integer, primary_key=True, index=True)
+    incident_id = Column(Integer, ForeignKey("incidents.id"))
+    sender_id = Column(Integer, ForeignKey("users.id"))
+    message = Column(String)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+
+    incident = relationship("Incident", back_populates="messages")
+    sender = relationship("User")
 
 
 class Complaint(Base):

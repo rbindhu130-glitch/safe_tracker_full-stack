@@ -5,7 +5,7 @@ from typing import List, Optional
 import shutil
 import os
 from api.database import get_db, supabase_client
-from api.models import User, Incident, Complaint
+from api.models import User, Incident, Complaint, ChatMessage
 from api.schemas import IncidentUpdate
 from api import schemas
 
@@ -528,3 +528,22 @@ def update_profile(
     db.commit()
     db.refresh(user)
     return user
+
+
+@router.get(
+    "/incidents/{incident_id}/chat", response_model=List[schemas.ChatMessageResponse]
+)
+def get_chat_messages(incident_id: int, db: Session = Depends(get_db)):
+    messages = (
+        db.query(ChatMessage)
+        .filter(ChatMessage.incident_id == incident_id)
+        .order_by(ChatMessage.timestamp.asc())
+        .all()
+    )
+
+    response = []
+    for msg in messages:
+        m_data = schemas.ChatMessageResponse.model_validate(msg)
+        m_data.sender_name = msg.sender.username if msg.sender else "Unknown"
+        response.append(m_data)
+    return response
