@@ -1,7 +1,7 @@
 // Helper to get API Base URL
 const hostname = window.location.hostname;
 const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-const apiBase = isLocal ? `http://${hostname}:8500` : "";
+const apiBase = isLocal ? `http://${hostname}:8501` : "";
 
 const incidentForm = document.getElementById("incidentForm");
 const user = JSON.parse(localStorage.getItem("user"));
@@ -174,9 +174,9 @@ async function loadRequests() {
                 </div>
                 <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 100px;">
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
-                   ${(['accepted', 'in_progress', 'awaiting_confirmation'].includes(req.status)) ?
+                   ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(req.status)) ?
                     `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px;">
-                        <i class="fas fa-comments"></i> Chat with Volunteer
+                        <i class="fas fa-comments"></i> ${req.status === 'closed' ? 'View Chat History' : 'Chat with Volunteer'}
                      </button>` : ''}
                    ${(req.status === 'reported' || req.status === 'pending') ?
                     `<button class="delete_btn_icon" title="Cancel Request" onclick="deleteIncident('${req.id}')" style="background: none; border: none; color: #dc2626; font-size: 24px; cursor: pointer; padding: 0; transition: transform 0.2s; display: flex;">

@@ -1,7 +1,7 @@
 // Helper to get API Base URL
 const hostname = window.location.hostname;
 const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-const apiBase = isLocal ? `http://${hostname}:8500` : "";
+const apiBase = isLocal ? `http://${hostname}:8501` : "";
 
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -166,9 +166,9 @@ async function loadIncidents() {
                 <p><strong>${incident.title}</strong></p>
                 <p style="font-size:13px">User: ${incident.reporter_name || 'Anonymous'}</p>
                    <span class="status_badge status_${incident.status}">${incident.status.replace('_', ' ').toUpperCase()}</span>
-                   ${(['accepted', 'in_progress', 'awaiting_confirmation'].includes(incident.status)) ?
+                   ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(incident.status)) ?
             `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}')" style="margin-top:5px;">
-                        <i class="fas fa-comments"></i> Chat
+                        <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'View Chat History' : 'Chat'}
                      </button>` : ''}
               </div>
               <div class="status" style="background:${statusColor}">${incident.status.toUpperCase()}</div>

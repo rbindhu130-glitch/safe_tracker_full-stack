@@ -59,11 +59,14 @@ app = FastAPI(title="SafeTracker API")
 
 @app.websocket("/ws/chat/{incident_id}/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, incident_id: int, user_id: int):
+    print(f"WS Connect attempt: incident={incident_id}, user={user_id}", flush=True)
     await manager.connect(websocket, incident_id, user_id)
+    print(f"WS Connected: incident={incident_id}, user={user_id}", flush=True)
     db = next(database.get_db())
     try:
         while True:
             data = await websocket.receive_text()
+            print(f"WS Data received: {data}", flush=True)
             message_data = json.loads(data)
 
             # Save message to DB
@@ -89,11 +92,16 @@ async def websocket_endpoint(websocket: WebSocket, incident_id: int, user_id: in
                 "message": db_msg.message,
                 "timestamp": db_msg.timestamp.isoformat(),
             }
+            print(f"WS Broadcasting: {broadcast_data}", flush=True)
             await manager.broadcast(broadcast_data, incident_id)
     except WebSocketDisconnect:
+        print(f"WS Disconnected: incident={incident_id}, user={user_id}", flush=True)
         manager.disconnect(websocket, incident_id)
     except Exception as e:
         print(f"WS Error: {e}")
+        import traceback
+
+        traceback.print_exc()
         manager.disconnect(websocket, incident_id)
     finally:
         db.close()
