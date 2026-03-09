@@ -9,7 +9,7 @@ load_dotenv()
 
 # Update these details with your PostgreSQL credentials from pgAdmin
 # Format: "postgresql://username:password@localhost:port/database_name"
-SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./safetracker.db")
 # Mask password for security
 if SQLALCHEMY_DATABASE_URL:
     try:

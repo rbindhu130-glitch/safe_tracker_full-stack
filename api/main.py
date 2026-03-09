@@ -69,6 +69,18 @@ async def validation_exception_handler(request, exc):
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 
+@app.get("/api/health")
+def health():
+    from os import getenv
+
+    return {
+        "status": "ok",
+        "database": "configured"
+        if getenv("DATABASE_URL")
+        else "using fallback (check env vars)",
+    }
+
+
 @app.get("/")
 def root():
     return {"message": "Welcome to SafeTracker API"}
