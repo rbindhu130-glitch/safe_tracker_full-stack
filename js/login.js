@@ -21,7 +21,9 @@ loginForm.addEventListener("submit", async (e) => {
             alert("Login successful!");
             localStorage.setItem("user", JSON.stringify(data.user));
 
-            if (data.user.role === "volunteer") {
+            if (data.user.role === "admin") {
+                window.location.href = "admin.html";
+            } else if (data.user.role === "volunteer") {
                 window.location.href = "volunteer.html";
             } else {
                 window.location.href = "user.html";

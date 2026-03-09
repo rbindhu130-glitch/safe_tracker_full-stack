@@ -8,6 +8,8 @@ class UserBase(BaseModel):
     email: str
     mobile: str
     role: str
+    address: Optional[str] = None
+    emergency_contact_email: Optional[str] = None
 
 
 class UserCreate(UserBase):
@@ -17,6 +19,7 @@ class UserCreate(UserBase):
 class UserResponse(UserBase):
     id: int
     profile_image: Optional[str] = None
+    is_approved: bool
 
     class Config:
         from_attributes = True
@@ -47,7 +50,7 @@ class IncidentUpdate(BaseModel):
 class IncidentResponse(IncidentBase):
     id: int
     status: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
     reporter_id: int
     volunteer_id: Optional[int] = None
     reporter_name: Optional[str] = None
@@ -58,21 +61,23 @@ class IncidentResponse(IncidentBase):
 
 
 class IncidentCreateResponse(BaseModel):
+    id: int
     title: str
     full_address: str
     status: str
-    created_at: datetime
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
 
 
 class IncidentStatusResponse(BaseModel):
+    id: int
     title: str
     full_address: str
     latitude: Optional[float] = None
     longitude: Optional[float] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
     status: str
 
     class Config:

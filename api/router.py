@@ -1,93 +1,13 @@
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import shutil
 import os
-from .database import get_db, supabase_client
-from .models import User, Incident, Complaint
-from .schemas import IncidentUpdate
-from . import schemas
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
-
-
-def send_completion_email(
-    to_email: str,
-    incident_title: str,
-    volunteer_email: str,
-    volunteer_name: str,
-    incident_id: int,
-):
-    print(
-        f"Preparing email - From Volunteer: {volunteer_email} ({volunteer_name}) -> To User: {to_email}"
-    )
-
-    # CONFIGURATION: The email account that physically sends the email
-    smtp_server = "smtp.gmail.com"
-    smtp_port = 587
-    system_email = os.getenv("SMTP_EMAIL")
-    system_password = os.getenv("SMTP_PASSWORD")
-
-    subject = f"SafeTracker: Incident Completed '{incident_title}'"
-
-    # HTML Body with Links
-    # Use environment variable for the base URL in production
-    base_url = os.getenv("BASE_URL", "http://localhost:3000")
-    yes_link = f"{base_url}/users/incidents/{incident_id}/verify?choice=yes"
-    no_link = f"{base_url}/users/incidents/{incident_id}/verify?choice=no"
-
-    html_body = f"""
-    <html>
-      <body style="font-family: Arial, sans-serif; padding: 20px;">
-        <h2 style="color: #333;">Incident Completion Confirmation</h2>
-        <p>Hello,</p>
-        <p>The volunteer <b>{volunteer_name}</b> ({volunteer_email}) has marked your incident '<b>{incident_title}</b>' as COMPLETED.</p>
-        <p>Please confirm if the request has been fulfilled:</p>
-        <div style="margin: 20px 0;">
-            <a href="{yes_link}" style="background-color: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-right: 10px;">YES (Close Request)</a>
-            <a href="{no_link}" style="background-color: #dc3545; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">NO (Not Done)</a>
-        </div>
-        <p>If you select NO, the request will remain awaiting confirmation.</p>
-        <br>
-        <p>Stay Safe,<br>SafeTracker Team</p>
-      </body>
-    </html>
-    """
-
-    message = MIMEMultipart()
-    # Using System Email as the actual sender to avoid Gmail rejection
-    # But setting the display name to the Volunteer's name
-    message["From"] = f"{volunteer_name} <{system_email}>"
-    message["Reply-To"] = volunteer_email
-    message["To"] = to_email
-    message["Subject"] = subject
-    message.attach(MIMEText(html_body, "html"))
-
-    server = None
-    try:
-        # Connect to the server and send email
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()  # Secure the connection
-        server.login(system_email, system_password)
-        server.sendmail(system_email, to_email, message.as_string())
-        print(f"Email sent successfully to {to_email}")
-        return {"status": "sent"}
-    except Exception as e:
-        print(f"Error sending email: {e}")
-        print("\n" + "=" * 50)
-        print(f"EMAIL SIMULATION (Real sending failed: {e})")
-        print(f"FROM:     {volunteer_email} (Volunteer DB Email)")
-        print(f"TO:       {to_email} (User DB Email)")
-        print("-" * 20)
-        print(f"Click YES (Verify): {yes_link}")
-        print(f"Click NO (Reject): {no_link}")
-        print("=" * 50 + "\n")
-        return {"status": "failed_simulated", "error": str(e)}
-    finally:
-        if server:
-            server.quit()
+from api.database import get_db, supabase_client
+from api.models import User, Incident, Complaint
+from api.schemas import IncidentUpdate
+from api import schemas
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -184,7 +104,12 @@ def signup(
         db.rollback()
         raise HTTPException(status_code=400, detail="Username or email already exists")
 
-    return {"message": "Signup successful", "user_id": user.id, "role": user.role}
+    return {
+        "message": "Signup successful",
+        "user_id": user.id,
+        "role": user.role,
+        "user": schemas.UserResponse.model_validate(user),
+    }
 
 
 @router.put("/users/{user_id}")
@@ -223,14 +148,7 @@ def login(
 
     return {
         "message": "Login successful",
-        "user": {
-            "id": user.id,
-            "username": user.username,
-            "role": user.role,
-            "email": user.email,
-            "address": user.address,
-            "emergency_contact_email": user.emergency_contact_email,
-        },
+        "user": schemas.UserResponse.model_validate(user),
     }
 
 
@@ -239,7 +157,7 @@ def login(
 
 @router.post("/incidents", response_model=schemas.IncidentCreateResponse)
 def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_db)):
-    new_incident = Incident(**incident.dict())
+    new_incident = Incident(**incident.model_dump())
     db.add(new_incident)
     db.commit()
     db.refresh(new_incident)
@@ -256,7 +174,9 @@ def get_incident_status(incident_id: int, db: Session = Depends(get_db)):
 
 
 @router.delete("/incidents/{incident_id}")
-def delete_incident(incident_id: int, user_id: int, db: Session = Depends(get_db)):
+def delete_incident(
+    incident_id: int, user_id: int = Query(...), db: Session = Depends(get_db)
+):
     # Validate user ownership
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not incident:
@@ -273,11 +193,11 @@ def delete_incident(incident_id: int, user_id: int, db: Session = Depends(get_db
     return {"message": "Incident deleted"}
 
 
-@router.put("/incidents/{incident_id}")
+@router.put("/incidents/{incident_id}", response_model=schemas.IncidentResponse)
 def update_incident(
     incident_id: int,
     incident_update: IncidentUpdate,
-    user_id: int,
+    user_id: int = Query(...),
     db: Session = Depends(get_db),
 ):
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
@@ -300,60 +220,64 @@ def update_incident(
 
     db.commit()
     db.refresh(incident)
-    return incident
+
+    # Manual mapping for response model
+    res = schemas.IncidentResponse.model_validate(incident)
+    res.reporter_name = incident.reporter.username if incident.reporter else "Unknown"
+    res.volunteer_name = (
+        incident.volunteer.username if incident.volunteer else "Waiting..."
+    )
+    return res
 
 
 @router.get("/incidents")
 def get_incidents(db: Session = Depends(get_db)):
-    incidents = db.query(Incident).all()
-
-    response = []
-    for inc in incidents:
-        response.append(
-            {
-                "id": inc.id,
-                "title": inc.title,
-                "full_address": inc.full_address,
-                "latitude": inc.latitude,
-                "longitude": inc.longitude,
-                "status": inc.status,
-                "created_at": inc.created_at.isoformat() if inc.created_at else None,
-                "reporter_id": inc.reporter_id,
-                "volunteer_id": inc.volunteer_id,
-                "reporter_name": inc.reporter.username if inc.reporter else "Unknown",
-                "volunteer_name": inc.volunteer.username
-                if inc.volunteer
-                else "Waiting...",
-            }
-        )
-
-    return response
+    try:
+        incidents = db.query(Incident).all()
+        response = []
+        for inc in incidents:
+            try:
+                inc_data = schemas.IncidentResponse.model_validate(inc)
+                inc_data.reporter_name = (
+                    inc.reporter.username if inc.reporter else "Unknown"
+                )
+                inc_data.volunteer_name = (
+                    inc.volunteer.username if inc.volunteer else "Waiting..."
+                )
+                response.append(inc_data)
+            except Exception as inner_e:
+                print(
+                    f"DEBUG Error processing incident #{getattr(inc, 'id', '?')}: {inner_e}"
+                )
+        return response
+    except Exception as e:
+        print(f"DEBUG Error in GET /incidents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/incidents/user/{user_id}")
 def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
-    incidents = db.query(Incident).filter(Incident.reporter_id == user_id).all()
-
-    response = []
-    for inc in incidents:
-        response.append(
-            {
-                "id": inc.id,
-                "title": inc.title,
-                "full_address": inc.full_address,
-                "latitude": inc.latitude,
-                "longitude": inc.longitude,
-                "status": inc.status,
-                "created_at": inc.created_at.isoformat() if inc.created_at else None,
-                "reporter_id": inc.reporter_id,
-                "volunteer_id": inc.volunteer_id,
-                "reporter_name": inc.reporter.username if inc.reporter else "Unknown",
-                "volunteer_name": inc.volunteer.username
-                if inc.volunteer
-                else "Waiting...",
-            }
-        )
-    return response
+    try:
+        incidents = db.query(Incident).filter(Incident.reporter_id == user_id).all()
+        response = []
+        for inc in incidents:
+            try:
+                inc_data = schemas.IncidentResponse.model_validate(inc)
+                inc_data.reporter_name = (
+                    inc.reporter.username if inc.reporter else "Unknown"
+                )
+                inc_data.volunteer_name = (
+                    inc.volunteer.username if inc.volunteer else "Waiting..."
+                )
+                response.append(inc_data)
+            except Exception as inner_e:
+                print(
+                    f"DEBUG Error processing user incident #{getattr(inc, 'id', '?')}: {inner_e}"
+                )
+        return response
+    except Exception as e:
+        print(f"DEBUG Error in GET /incidents/user/{user_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/incidents/{incident_id}/accept")
@@ -404,32 +328,7 @@ def complete_incident(incident_id: int, db: Session = Depends(get_db)):
     incident.status = "awaiting_confirmation"
     db.commit()
 
-    email_result = {"status": "not_attempted"}
-
-    # Send Email Notification
-    # We fetch the volunteer (sender) and reporter (receiver) emails dynamically
-    if incident.reporter and incident.reporter.email:
-        rec_email = incident.reporter.email
-        vol_email = (
-            incident.volunteer.email if incident.volunteer else "volunteer@example.com"
-        )
-        vol_name = incident.volunteer.username if incident.volunteer else "Volunteer"
-
-        print("DEBUG: Attempting to send completion email...")
-        print(f"DEBUG: Recipient (User): {rec_email}")
-        print(f"DEBUG: Sender (Volunteer): {vol_email}")
-
-        email_result = send_completion_email(
-            rec_email, incident.title, vol_email, vol_name, incident.id
-        )
-    else:
-        print("DEBUG: Skip email - Incident reporter or email not found")
-        email_result = {"status": "skipped", "reason": "no_reporter_email"}
-
-    return {
-        "message": "Incident marked as completed, awaiting user confirmation",
-        "email_result": email_result,
-    }
+    return {"message": "Incident marked as completed, awaiting user confirmation"}
 
 
 @router.put("/incidents/{incident_id}/confirm")
@@ -493,7 +392,7 @@ def get_available_incidents(db: Session = Depends(get_db)):
     incidents = db.query(Incident).filter(Incident.status == "reported").all()
     response = []
     for inc in incidents:
-        inc_data = schemas.IncidentResponse.from_orm(inc)
+        inc_data = schemas.IncidentResponse.model_validate(inc)
         inc_data.reporter_name = inc.reporter.username if inc.reporter else "Unknown"
         inc_data.volunteer_name = "Waiting..."
         response.append(inc_data)
@@ -544,7 +443,7 @@ def approve_volunteer(user_id: int, db: Session = Depends(get_db)):
 
 @router.post("/complaints", response_model=schemas.ComplaintResponse)
 def create_complaint(complaint: schemas.ComplaintCreate, db: Session = Depends(get_db)):
-    new_complaint = Complaint(**complaint.dict())
+    new_complaint = Complaint(**complaint.model_dump())
     db.add(new_complaint)
     db.commit()
     db.refresh(new_complaint)
@@ -563,6 +462,7 @@ def get_complaints(db: Session = Depends(get_db)):
 def update_profile(
     username: Optional[str] = Form(None),
     email: Optional[str] = Form(None),
+    mobile: Optional[str] = Form(None),
     address: Optional[str] = Form(None),
     user_id: int = Form(...),
     image: Optional[UploadFile] = File(None),
@@ -588,6 +488,8 @@ def update_profile(
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already in use")
         user.email = email
+    if mobile:
+        user.mobile = mobile
     if address:
         user.address = address
 

@@ -1,5 +1,11 @@
 const user = JSON.parse(localStorage.getItem("user"));
 
+// Helper to get API Base URL
+const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+    ? "http://127.0.0.1:8500"
+    : "";
+
+
 if (!user) {
     window.location.href = "login.html";
 }
@@ -28,7 +34,7 @@ if (user.profile_image) {
     // Check if it's a relative path starting with static/ or uploads/
     let imgPath = user.profile_image;
     if (!imgPath.startsWith('http')) {
-        imgPath = `/api/${imgPath}`;
+        imgPath = `${apiBase}/${imgPath}`;
     }
 
     userImg.src = imgPath;
@@ -95,7 +101,7 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
     }
 
     try {
-        const res = await fetch("/api/users/profile/update", {
+        const res = await fetch(`${apiBase}/api/users/profile/update`, {
             method: "PUT",
             body: formData
         });

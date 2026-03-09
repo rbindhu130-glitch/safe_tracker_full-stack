@@ -11,16 +11,33 @@ if (!user || user.role !== "volunteer") {
 
 let isProcessing = false;
 
+let mapInstances = {};
+
 async function loadIncidents() {
   try {
-    const response = await fetch(`${apiBase}/api/users/incidents`);
+    const url = `${apiBase}/api/users/incidents`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error("Failed to fetch incidents:", response.status);
+      return;
+    }
     const data = await response.json();
 
     const liveList = document.getElementById("live_list");
     const historyList = document.getElementById("history_list");
 
+    // Pre-cleanup maps
+    for (let id in mapInstances) {
+      if (mapInstances[id]) {
+        mapInstances[id].remove();
+        delete mapInstances[id];
+      }
+    }
+
     liveList.innerHTML = '';
     historyList.innerHTML = '';
+
+    if (!Array.isArray(data)) return;
 
     data.forEach(incident => {
       const userAddrParts = (user.address || "").toLowerCase().split(",").map(p => p.trim()).filter(p => p);
@@ -36,7 +53,7 @@ async function loadIncidents() {
               <div class="request_row">
                 <div class="request_info">
                   <p class="request_title">${incident.title}</p>
-                  <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Reported by: <strong>${incident.reporter_name}</strong></p>
+                  <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Reported by: <strong>${incident.reporter_name || 'Anonymous'}</strong></p>
                   <p class="request_meta">${incident.full_address || 'No location'} <span class="dot"></span> ${new Date(incident.created_at).toLocaleString()}</p>
                 </div>
                 <span class="incident_status" onclick="updateStatus(${incident.id}, 'accept')">Accept</span>
@@ -50,18 +67,19 @@ async function loadIncidents() {
 
         let actionBtn = "";
         if (incident.status === "accepted") {
-          actionBtn = `<span class="incident_status" style="background:var(--primary_blue)" onclick="updateStatus(${incident.id}, 'in_progress')">Start Heading There</span>`;
+          actionBtn = `<span class="incident_status" style="background:var(--primary_blue)" onclick="updateStatus(${incident.id}, 'start')">Start Heading There</span>`;
         } else if (incident.status === "in_progress") {
           actionBtn = `<span class="incident_status" style="background:#16a34a" onclick="updateStatus(${incident.id}, 'complete')">I Have Arrived</span>`;
         }
 
+        const mapId = `map_${incident.id}`;
         div.innerHTML = `
                <div class="request_row">
                  <div class="request_info">
                    <p class="request_title">${incident.title} (${incident.status.replace('_', ' ')})</p>
-                   <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name}</strong></p>
+                   <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
                    <p class="request_meta">${incident.full_address || 'No location'}</p>
-                   <div id="map_${incident.id}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
+                   <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
                    <a href="https://www.google.com/maps?q=${incident.latitude && incident.longitude ? incident.latitude + ',' + incident.longitude : encodeURIComponent(incident.full_address || '')}" target="_blank" style="display:block; margin-top:8px; color:var(--primary_blue); font-size:13px; text-decoration:none;">
                      <i class="fas fa-external-link-alt"></i> Open in Google Maps
                    </a>
@@ -71,12 +89,16 @@ async function loadIncidents() {
              `;
         liveList.appendChild(div);
 
-        const mapId = `map_${incident.id}`;
-        const lat = incident.latitude || 20.5937;
-        const lng = incident.longitude || 78.9629;
-        const vmap = L.map(mapId).setView([lat, lng], 15);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(vmap);
-        L.marker([lat, lng]).addTo(vmap);
+        try {
+          const lat = incident.latitude || 20.5937;
+          const lng = incident.longitude || 78.9629;
+          const vmap = L.map(mapId).setView([lat, lng], 15);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(vmap);
+          L.marker([lat, lng]).addTo(vmap);
+          mapInstances[mapId] = vmap;
+        } catch (mapErr) {
+          console.error("Map init error:", mapErr);
+        }
       }
       else if (incident.volunteer_id == user.id) {
         const div = document.createElement("div");
@@ -87,7 +109,7 @@ async function loadIncidents() {
         div.innerHTML = `
               <div>
                 <p><strong>${incident.title}</strong></p>
-                <p style="font-size:13px">User: ${incident.reporter_name}</p>
+                <p style="font-size:13px">User: ${incident.reporter_name || 'Anonymous'}</p>
                 <p style="font-size:13px; color:${statusColor}">Status: ${displayStatus.replace('_', ' ').toUpperCase()}</p>
               </div>
               <div class="status" style="background:${statusColor}">${incident.status.toUpperCase()}</div>
@@ -99,8 +121,11 @@ async function loadIncidents() {
     if (liveList.children.length === 0) liveList.innerHTML += "<p style='text-align:center; padding:20px;'>No live requests.</p>";
     if (historyList.children.length === 0) historyList.innerHTML += "<p style='text-align:center; padding:20px;'>No history found.</p>";
 
-  } catch (error) { console.error(error); }
+  } catch (error) {
+    console.error("Error loading incidents:", error);
+  }
 }
+
 
 async function updateStatus(incidentId, action) {
   if (isProcessing) return;

@@ -150,54 +150,21 @@ async function loadRequests() {
             div.style.flexDirection = "column";
             div.style.alignItems = "stretch";
 
-            const statusMap = {
-                'reported': 0, 'pending': 0, 'accepted': 1, 'in_progress': 2, 'awaiting_confirmation': 3, 'closed': 4
-            };
-            const currentStep = statusMap[req.status] || 0;
-            const progressWidth = (currentStep / 4) * 100;
-
-            const steps = [
-                { label: 'Reported', icon: 'fa-bullhorn' },
-                { label: 'Volunteer Assigned', icon: 'fa-user-check' },
-                { label: 'In Route', icon: 'fa-person-running' },
-                { label: 'Arrived', icon: 'fa-location-dot' },
-                { label: 'Safe', icon: 'fa-shield-heart' }
-            ];
-
-            const trackerHtml = `
-                <div class="status_tracker_container">
-                    <div class="tracker_steps">
-                        <div class="tracker_progress_bar" style="width: ${progressWidth}%"></div>
-                        ${steps.map((step, index) => `
-                            <div class="step ${index === currentStep ? 'active' : ''} ${index < currentStep ? 'completed' : ''}">
-                                <div class="step_icon"><i class="fas ${step.icon}"></i></div>
-                                <div class="step_label">${step.label}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            `;
-
             div.innerHTML = `
               <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div class="request_info">
                   <h4>${req.title}</h4>
                   <p>${req.full_address || 'No address'}</p>
-                  <div class="action_buttons">
-                      ${(req.status === 'reported' || req.status === 'pending') ?
-                    `<button class="btn_sm btn_edit" onclick="editIncident('${req.id}')">Edit</button>
-                         <button class="btn_sm btn_delete" onclick="deleteIncident('${req.id}')">Cancel Request</button>`
-                    : ''}
-                      ${req.status === 'awaiting_confirmation' ?
-                    `<button class="btn_sm" style="background: var(--primary_blue); padding: 8px 15px;" onclick="confirmIncident('${req.id}', true)">Confirm Arrival / Safe</button>`
-                    : ''}
-                  </div>
                 </div>
-                <div style="text-align:right">
+                <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 100px;">
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
+                   ${(req.status === 'reported' || req.status === 'pending') ?
+                    `<button class="delete_btn_icon" title="Cancel Request" onclick="deleteIncident('${req.id}')" style="background: none; border: none; color: #dc2626; font-size: 24px; cursor: pointer; padding: 0; transition: transform 0.2s; display: flex;">
+                        <i class="fas fa-times-circle"></i>
+                     </button>`
+                    : ''}
                 </div>
               </div>
-              ${trackerHtml}
             `;
             list.appendChild(div);
         });

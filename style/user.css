@@ -336,6 +336,25 @@ body {
   background-color: #dc2626;
 }
 
+.btn_delete_icon {
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, color 0.2s;
+  margin-top: 5px;
+}
+
+.btn_delete_icon:hover {
+  transform: scale(1.2);
+  color: #b91c1c;
+}
+
 /* ========== RIGHT SIDEBAR PROFILE ========== */
 .profile_sidebar {
   position: fixed;

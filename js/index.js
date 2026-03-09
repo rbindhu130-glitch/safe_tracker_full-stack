@@ -2,6 +2,12 @@
 const navLinks = document.getElementById('navLinks');
 const loggedUser = JSON.parse(localStorage.getItem("user"));
 
+// Helper to get API Base URL
+const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+    ? "http://127.0.0.1:8500"
+    : "";
+
+
 if (navLinks) {
     if (loggedUser) {
         navLinks.innerHTML += `
@@ -123,7 +129,7 @@ document.getElementById("editProfileForm")?.addEventListener("submit", async (e)
     }
 
     try {
-        const res = await fetch("/api/users/profile/update", {
+        const res = await fetch(`${apiBase}/api/users/profile/update`, {
             method: "PUT",
             body: formData
         });

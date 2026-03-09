@@ -88,14 +88,7 @@ signupForm.addEventListener("submit", async (e) => {
         if (response.ok) {
             if (roleValue === "user") {
                 // AUTO-LOGIN for Users to avoid "second signup page" feel
-                const userObj = {
-                    id: data.user_id,
-                    username: formData.get("username"),
-                    email: formData.get("email"),
-                    role: data.role,
-                    is_approved: true
-                };
-                localStorage.setItem("user", JSON.stringify(userObj));
+                localStorage.setItem("user", JSON.stringify(data.user));
                 alert("Welcome to SafeTracker! You are now logged in.");
                 window.location.href = "user.html";
             } else {

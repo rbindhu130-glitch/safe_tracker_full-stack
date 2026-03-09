@@ -97,9 +97,6 @@
         <div class="profile_img_container" id="profileImgContainer">
           <i class="fas fa-user-circle" id="defaultIcon"></i>
           <img id="userImg" src="" alt="Profile Image" class="hidden">
-          <div class="img_overlay" onclick="document.getElementById('imageInput').click()">
-            <i class="fas fa-camera"></i>
-          </div>
         </div>
         <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="previewImage(event)">
         <h2 id="userNameDisplay">User Name</h2>
@@ -124,7 +121,6 @@
       </div>
 
       <div class="profile_actions">
-        <button class="edit_btn" onclick="openEditModal()">Edit Profile</button>
       </div>
     </div>
   </div>

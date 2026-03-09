@@ -1,10 +1,19 @@
+// Helper to get API Base URL
+const apiBase = (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost")
+    ? "http://127.0.0.1:8500"
+    : "";
+
+console.log("Edit Incident page loaded");
+
 const editForm = document.getElementById("editForm");
 const user = JSON.parse(localStorage.getItem("user"));
 const urlParams = new URLSearchParams(window.location.search);
 const incidentId = urlParams.get('id');
 
-const getMapBtn = document.querySelector(".get_map_btn");
+console.log("User from localStorage:", user);
+console.log("Incident ID from URL:", incidentId);
 
+const getMapBtn = document.querySelector(".get_map_btn");
 const locationInput = document.getElementById("location");
 const mapIframe = document.querySelector(".map_wrapper iframe");
 
@@ -13,16 +22,15 @@ let currentLng = null;
 
 
 if (!user) {
-    window.location.href = "../pages/login.html";
+    console.warn("No user found in localStorage, redirecting to login");
+    window.location.href = "login.html";
 }
 
 if (!incidentId) {
+    console.error("No incident ID provided in URL");
     alert("No incident ID provided");
     window.location.href = "user.html";
 }
-
-// Reuse geolocation logic from user.js
-
 
 async function reverseGeocode(lat, lng) {
     try {
@@ -45,12 +53,16 @@ async function reverseGeocode(lat, lng) {
 }
 
 function handleGeolocation() {
+    console.log("Requesting geolocation...");
     if (navigator.geolocation) {
         getMapBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
         navigator.geolocation.getCurrentPosition((position) => {
             currentLat = position.coords.latitude;
             currentLng = position.coords.longitude;
-            mapIframe.src = `https://maps.google.com/maps?q=${currentLat},${currentLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            console.log("Geo location found:", currentLat, currentLng);
+            if (mapIframe) {
+                mapIframe.src = `https://maps.google.com/maps?q=${currentLat},${currentLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            }
             reverseGeocode(currentLat, currentLng);
             getMapBtn.innerHTML = '<i class="fas fa-check"></i>';
             setTimeout(() => { getMapBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i>'; }, 3000);
@@ -64,64 +76,85 @@ function handleGeolocation() {
     }
 }
 
-getMapBtn.addEventListener("click", handleGeolocation);
+if (getMapBtn) getMapBtn.addEventListener("click", handleGeolocation);
 
 // Load Incident Details
 async function loadIncidentDetails() {
+    const fetchUrl = `${apiBase}/api/users/incident/me/${incidentId}`;
+    console.log("Loading details from:", fetchUrl);
     try {
-        const response = await fetch(`/api/users/incident/me/${incidentId}`);
-        if (!response.ok) throw new Error("Failed to fetch incident");
+        const response = await fetch(fetchUrl);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Failed to fetch incident: ${response.status} ${errorText}`);
+        }
 
         const data = await response.json();
+        console.log("Loaded incident data:", data);
 
-        document.getElementById("incidentId").value = data.id;
-        document.getElementById("select").value = data.title;
-        document.getElementById("location").value = data.full_address;
+        if (document.getElementById("incidentId")) document.getElementById("incidentId").value = data.id;
+        if (document.getElementById("select")) document.getElementById("select").value = data.title || "security";
+        if (document.getElementById("location")) document.getElementById("location").value = data.full_address || "";
 
         if (data.latitude && data.longitude) {
             currentLat = data.latitude;
             currentLng = data.longitude;
-            mapIframe.src = `https://maps.google.com/maps?q=${currentLat},${currentLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            if (mapIframe) {
+                mapIframe.src = `https://maps.google.com/maps?q=${currentLat},${currentLng}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+            }
         }
     } catch (e) {
-        console.error(e);
-        alert("Error loading incident details");
-        window.location.href = "user.html";
+        console.error("Error in loadIncidentDetails:", e);
+        alert("Error loading incident details: " + e.message);
+        // window.location.href = "user.html";
     }
 }
 
 // Handle Update
-editForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
+if (editForm) {
+    editForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        console.log("Form submit triggered");
 
-    const title = document.getElementById("select").value;
-    const full_address = document.getElementById("location").value;
+        const title = document.getElementById("select").value;
+        const full_address = document.getElementById("location").value;
 
-    const payload = {
-        title: title,
-        full_address: full_address,
-        latitude: currentLat,
-        longitude: currentLng
-    };
+        const payload = {
+            title: title,
+            full_address: full_address,
+            latitude: currentLat,
+            longitude: currentLng
+        };
 
-    try {
-        const response = await fetch(`/api/users/incidents/${incidentId}?user_id=${user.id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+        const updateUrl = `${apiBase}/api/users/incidents/${incidentId}?user_id=${user.id}`;
+        console.log("Updating incident at:", updateUrl);
+        console.log("Payload:", payload);
 
-        if (response.ok) {
-            alert("Incident updated successfully!");
-            window.location.href = "user.html";
-        } else {
-            const result = await response.json();
-            alert("Update failed: " + (result.detail || "Unknown error"));
+        try {
+            const response = await fetch(updateUrl, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                console.log("Update successful");
+                alert("Incident updated successfully!");
+                window.location.href = "user.html";
+            } else {
+                const result = await response.json();
+                console.error("Update failed:", result);
+                let errorMsg = result.detail || "Unknown error";
+                if (typeof errorMsg === 'object') errorMsg = JSON.stringify(errorMsg);
+                alert("Update failed: " + errorMsg);
+            }
+        } catch (e) {
+            console.error("Fetch error during update:", e);
+            alert("Server connection failed");
         }
-    } catch (e) {
-        console.error(e);
-        alert("Server connection failed");
-    }
-});
+    });
+} else {
+    console.error("Edit form not found!");
+}
 
 loadIncidentDetails();
