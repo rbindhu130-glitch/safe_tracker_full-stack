@@ -175,7 +175,7 @@ async function loadRequests() {
                 <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 100px;">
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(req.status)) ?
-                    `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px;">
+                    `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}', '${req.status}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px;">
                         <i class="fas fa-comments"></i> ${req.status === 'closed' ? 'View Chat History' : 'Chat with Volunteer'}
                      </button>` : ''}
                    ${(req.status === 'reported' || req.status === 'pending') ?

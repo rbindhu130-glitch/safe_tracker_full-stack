@@ -110,7 +110,7 @@ async function loadIncidents() {
                    <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
                    ${distHtml}
                     <p class="request_meta">${incident.full_address || 'No location'}</p>
-                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}')">
+                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')">
                         <i class="fas fa-comments"></i> Chat with User
                     </button>
                     <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
@@ -167,7 +167,7 @@ async function loadIncidents() {
                 <p style="font-size:13px">User: ${incident.reporter_name || 'Anonymous'}</p>
                    <span class="status_badge status_${incident.status}">${incident.status.replace('_', ' ').toUpperCase()}</span>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(incident.status)) ?
-            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}')" style="margin-top:5px;">
+            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:5px;">
                         <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'View Chat History' : 'Chat'}
                      </button>` : ''}
               </div>

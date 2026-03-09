@@ -9,12 +9,25 @@ let chatPollInterval = null;
 let lastMessageId = 0;
 let isFetchingChat = false;
 
-function openChat(incidentId, title) {
+function openChat(incidentId, title, status) {
     currentChatIncidentId = incidentId;
     lastMessageId = 0; // Reset for new chat
 
     document.getElementById("chatTitle").innerHTML = `<i class="fas fa-comments"></i> Chat: ${title}`;
     document.getElementById("chatModal").classList.add("active");
+
+    // Disable input if chat is closed
+    const chatInput = document.getElementById("chatInput");
+    const chatSubmitBtn = document.querySelector("#chatForm button[type='submit']");
+    if (status === 'closed') {
+        chatInput.disabled = true;
+        chatSubmitBtn.disabled = true;
+        chatInput.placeholder = "Incident closed. Chat is read-only.";
+    } else {
+        chatInput.disabled = false;
+        chatSubmitBtn.disabled = false;
+        chatInput.placeholder = "Type your message...";
+    }
 
     const chatBody = document.getElementById("chatBody");
     chatBody.innerHTML = "<p id='loadingChat' style='text-align:center; color:#64748b; font-size:12px;'>Loading history...</p>";
