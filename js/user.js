@@ -84,7 +84,7 @@ function handleGeolocation() {
 
     // Reset button state and start locating
     getMapBtn.innerHTML = '<i class="fas fa-satellite-dish fa-fade"></i> Requesting Access...';
-    getMapBtn.style.background = "#2563eb"; // Standard blue while waiting
+    getMapBtn.style.background = "#3b82f6"; // Primary blue while waiting
 
     // Directly call the native browser geolocation prompt
     navigator.geolocation.getCurrentPosition((position) => {
@@ -104,7 +104,7 @@ function handleGeolocation() {
     }, (error) => {
         console.error("GPS Error:", error);
         getMapBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Map';
-        getMapBtn.style.background = "var(--primary_blue)";
+        getMapBtn.style.background = "var(--primary, #3b82f6)";
 
         if (error.code === error.PERMISSION_DENIED) {
             alert("📍 Location access denied! \n\nPlease click the 'Lock' icon next to your URL bar and set Location to 'Allow'.");
@@ -147,7 +147,7 @@ function updatePositionData(position) {
 function handleGPSError(error) {
     console.error("GPS Error:", error);
     getMapBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Map';
-    getMapBtn.style.background = "var(--primary_blue)";
+    getMapBtn.style.background = "var(--primary, #3b82f6)";
 
     let msg = "GPS Error: ";
     if (error.code === 1) msg += "Please allow location permissions in your browser.";
