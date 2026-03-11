@@ -183,13 +183,12 @@ async function loadIncidents() {
               <div>
                 <p><strong>${incident.title}</strong></p>
                 <p style="font-size:13px">User: ${incident.reporter_name || 'Anonymous'}</p>
-                   <span class="status_badge status_${incident.status}">${incident.status.replace('_', ' ').toUpperCase()}</span>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(incident.status)) ?
             `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:5px;">
-                        <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'View Chat History' : 'Chat'}
+                        <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'History' : 'Chat'}
                      </button>` : ''}
               </div>
-              <div class="status" style="background:${statusColor}">${incident.status.toUpperCase()}</div>
+              <div class="status" style="background:${statusColor}; color: white; border:none;">${displayStatus.toUpperCase()}</div>
             `;
         historyList.appendChild(div);
       }
