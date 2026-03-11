@@ -1,7 +1,7 @@
 // Helper to get API Base URL
 const hostname = window.location.hostname;
 const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-const apiBase = isLocal ? `http://${hostname}:8501` : "";
+const apiBase = isLocal ? `http://${hostname}:8500` : "";
 
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -20,7 +20,18 @@ if (navigator.geolocation) {
   vWatchId = navigator.geolocation.watchPosition((pos) => {
     vLat = pos.coords.latitude;
     vLng = pos.coords.longitude;
-  }, (err) => console.error("Volunteer GPS error", err), { enableHighAccuracy: true });
+    console.log("Volunteer location updated:", vLat, vLng);
+  }, (err) => {
+    console.error("Volunteer GPS error", err);
+    if (err.code === err.PERMISSION_DENIED) {
+      console.warn("Location permission denied. Distance features will be disabled.");
+      // Proactively show a one-time message if blocked
+      if (!sessionStorage.getItem("gps_denied_alerted")) {
+        alert("📍 Location access is blocked! \n\nTo see distances to incidents, please click the 'Lock/Tune' icon next to the URL bar and set Location to 'Allow', then refresh.");
+        sessionStorage.setItem("gps_denied_alerted", "true");
+      }
+    }
+  }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
 function getDistance(lat1, lon1, lat2, lon2) {
@@ -63,20 +74,27 @@ async function loadIncidents() {
     if (!Array.isArray(data)) return;
 
     data.forEach(incident => {
-      const userAddrParts = (user.address || "").toLowerCase().split(",").map(p => p.trim()).filter(p => p);
-      const incidentLocation = (incident.full_address || "").toLowerCase();
-      const isLocationMatch = userAddrParts.some(part => incidentLocation.includes(part));
+      // Location filter: check if any keyword in volunteer's address matches incident address
+      const volAddrWords = (user.address || "").toLowerCase().trim().split(/[\s,]+/).filter(w => w.length > 2);
+      const incidentAddr = (incident.full_address || "").toLowerCase().trim();
+      
+      const isLocationMatch = volAddrWords.length === 0 || volAddrWords.some(word => incidentAddr.includes(word));
+      
+      console.log(`Checking Incident ${incident.id}: "${incidentAddr}" against Volunteer Keywords: [${volAddrWords}] -> Match: ${isLocationMatch}`);
 
       if ((incident.status === "reported" || incident.status === "pending") && !incident.volunteer_id) {
-        if (user.address && !isLocationMatch) return;
+        // Restore strict location filter: only show incidents that match volunteer's base location keywords
+        if (!isLocationMatch) return;
+
+        const nearbyBadge = volAddrWords.length > 0 ? '<span class="nearby_badge">Nearby</span> ' : '';
 
         const div = document.createElement("div");
         div.className = "request";
         div.innerHTML = `
               <div class="request_row">
                 <div class="request_info">
-                  <p class="request_title">${incident.title}</p>
-                  <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Reported by: <strong>${incident.reporter_name || 'Anonymous'}</strong></p>
+                  <p class="request_title">${nearbyBadge}${incident.title}</p>
+                  <p style="color:var(--primary); font-size:14px; margin-bottom:4px;">Reported by: <strong>${incident.reporter_name || 'Anonymous'}</strong></p>
                   <p class="request_meta">${incident.full_address || 'No location'} <span class="dot"></span> ${new Date(incident.created_at).toLocaleString()}</p>
                 </div>
                 <span class="incident_status" onclick="updateStatus(${incident.id}, 'accept')">Accept</span>
@@ -105,7 +123,7 @@ async function loadIncidents() {
 
         div.innerHTML = `
                <div class="request_row">
-                 <div class="request_info">
+                 <div class="request_info" style="width: 100%;">
                    <p class="request_title">${incident.title} (${incident.status.replace('_', ' ')})</p>
                    <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
                    ${distHtml}
@@ -114,8 +132,10 @@ async function loadIncidents() {
                         <i class="fas fa-comments"></i> Chat with User
                     </button>
                     <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
+                    <div style="margin-top: 15px; display: flex; justify-content: center;">
+                        ${actionBtn}
+                    </div>
                  </div>
-                 ${actionBtn}
                </div>
              `;
         liveList.appendChild(div);
@@ -232,6 +252,12 @@ function loadProfileData() {
   document.getElementById("editEmail").value = user.email || "";
   document.getElementById("editAddress").value = user.address || "";
   document.getElementById("userAddress").textContent = user.address || "No address set";
+  
+  // Ensure address fields are visible for volunteers
+  const addrSection = document.getElementById("addressSection");
+  if (addrSection) addrSection.classList.remove("hidden");
+  const editAddrGroup = document.getElementById("editAddressGroup");
+  if (editAddrGroup) editAddrGroup.classList.remove("hidden");
 }
 
 document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
