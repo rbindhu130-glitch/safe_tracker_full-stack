@@ -3,13 +3,22 @@ const hostname = window.location.hostname;
 const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
 const apiBase = isLocal ? `http://${hostname}:8500` : "";
 
-const incidentForm = document.getElementById("incidentForm");
+// --- STRICT ROLE CHECK ---
 const user = JSON.parse(localStorage.getItem("user"));
 
 if (!user) {
     window.location.href = "login.html";
+} else if (user.role === "volunteer") {
+    // If a volunteer tries to access the user page, send them to their dashboard
+    window.location.href = "volunteer.html";
+} else if (user.role === "admin") {
+    window.location.href = "admin.html";
+} else if (user.role !== "user") {
+    // Safety fallback for unknown roles
+    window.location.href = "login.html";
 }
 
+const incidentForm = document.getElementById("incidentForm");
 const getMapBtn = document.querySelector(".get_map_btn");
 const locationInput = document.getElementById("location");
 
@@ -194,7 +203,7 @@ async function loadRequests() {
                           display: flex; align-items: center; gap: 6px;
                           transition: all 0.2s ease;
                        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(5,150,105,0.4)'"
-                         onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(5,150,105,0.3)'">
+                          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(5, 150, 105, 0.3)'">
                           <i class="fas fa-check-circle"></i> Confirm
                        </button>
                        <button title="Not Completed" onclick="confirmIncident('${req.id}', false)" style="
@@ -206,7 +215,7 @@ async function loadRequests() {
                           display: flex; align-items: center; gap: 6px;
                           transition: all 0.2s ease;
                        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(220,38,38,0.4)'"
-                         onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(220,38,38,0.3)'">
+                          onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(220, 38, 38, 0.3)'">
                           <i class="fas fa-times-circle"></i> Not Done
                        </button>
                      </div>`
@@ -222,8 +231,6 @@ async function loadRequests() {
         console.error("Error loading requests:", e);
     }
 }
-
-
 
 async function confirmIncident(id, confirmed) {
     try {
@@ -266,8 +273,6 @@ incidentForm.addEventListener("submit", async (e) => {
         }
     } catch (error) { console.error(error); }
 });
-
-
 
 async function deleteIncident(id) {
     if (!confirm("Are you sure you want to delete this request?")) return;

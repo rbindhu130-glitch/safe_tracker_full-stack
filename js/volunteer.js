@@ -5,7 +5,13 @@ const apiBase = isLocal ? `http://${hostname}:8500` : "";
 
 const user = JSON.parse(localStorage.getItem("user"));
 
-if (!user || user.role !== "volunteer") {
+if (!user) {
+  window.location.href = "login.html";
+} else if (user.role === "user") {
+  window.location.href = "user.html";
+} else if (user.role === "admin") {
+  window.location.href = "admin.html";
+} else if (user.role !== "volunteer") {
   window.location.href = "login.html";
 }
 
