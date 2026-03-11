@@ -229,7 +229,14 @@ async function updateStatus(incidentId, action) {
 
   try {
     const response = await fetch(`${apiBase}/api/users/incidents/${incidentId}/${action}?volunteer_id=${user.id}`, { method: "PUT" });
-    if (response.ok) loadIncidents();
+    if (response.ok) {
+      showToast(action === "accept" ? "Incident Accepted!" : "Incident Completed!");
+      loadIncidents();
+    } else {
+      const err = await response.json();
+      showToast(err.detail || "Error updating status", "error");
+      loadIncidents();
+    }
   } catch (error) { console.error(error); } finally {
     isProcessing = false;
     document.body.style.cursor = "default";
@@ -296,7 +303,7 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
     if (res.ok) {
       const updatedUser = await res.json();
       localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
-      alert("Profile updated!");
+      showToast("Profile updated!");
       document.getElementById("editModal").classList.add("hidden");
       loadProfileData();
     }
