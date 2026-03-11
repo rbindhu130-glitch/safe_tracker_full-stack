@@ -83,7 +83,16 @@ signupForm.addEventListener("submit", async (e) => {
             body: formData,
         });
 
-        const data = await response.json();
+        // Read response as text first to handle non-JSON errors (like 500 Internal Server Error)
+        const responseText = await response.text();
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (e) {
+            console.error("Non-JSON Response:", responseText);
+            alert("🛑 Server Error (Plain Text): " + responseText);
+            return;
+        }
 
         if (response.ok) {
             if (roleValue === "user") {
@@ -98,17 +107,22 @@ signupForm.addEventListener("submit", async (e) => {
             }
         } else {
             let errMsg = "Unknown error";
-            if (typeof data.detail === "string") {
-                errMsg = data.detail;
-            } else if (Array.isArray(data.detail)) {
-                errMsg = data.detail.map(err => err.msg || JSON.stringify(err)).join(", ");
-            } else if (typeof data.detail === "object") {
-                errMsg = JSON.stringify(data.detail);
+            if (data && data.detail) {
+                if (typeof data.detail === "string") {
+                    errMsg = data.detail;
+                } else if (Array.isArray(data.detail)) {
+                    errMsg = data.detail.map(err => err.msg || JSON.stringify(err)).join(", ");
+                } else {
+                    errMsg = JSON.stringify(data.detail);
+                }
+            } else if (data && data.traceback) {
+                errMsg = "Internal Crash (see console)";
+                console.error("Server Traceback:", data.traceback);
             }
             alert("Signup failed: " + errMsg);
         }
     } catch (error) {
-        console.error("Error:", error);
-        alert("Could not connect to server. Make sure backend is running.");
+        console.error("Connection Error:", error);
+        alert("🔌 Could not connect to server. \n\n1. Check if backend is running. \n2. Make sure you are using http://" + window.location.hostname + ":8500");
     }
 });
