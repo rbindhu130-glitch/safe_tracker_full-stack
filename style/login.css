@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 :root {
   --primary_blue: #3b82f6;
   --primary_hover: #2563eb;
@@ -20,6 +22,41 @@ body {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  z-index: 0;
+  animation: float 10s infinite ease-in-out alternate;
+  pointer-events: none;
+}
+
+body::before {
+  width: 400px;
+  height: 400px;
+  background: rgba(59, 130, 246, 0.15);
+  top: -100px;
+  left: -100px;
+}
+
+body::after {
+  width: 300px;
+  height: 300px;
+  background: rgba(96, 165, 250, 0.1);
+  bottom: 0;
+  right: -50px;
+  animation-delay: -5s;
+}
+
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  100% { transform: translateY(20px) scale(1.05); }
 }
 
 .login {
@@ -40,7 +77,6 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -64,7 +100,6 @@ body {
   font-size: 14px;
 }
 
-/* Remove default br tags spacing */
 .login br {
   display: none;
 }

@@ -103,6 +103,10 @@ def signup(
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Username or email already exists")
+    except Exception as e:
+        db.rollback()
+        print(f"DEBUG Signup Error: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(e)}")
 
     return {
         "message": "Signup successful",
