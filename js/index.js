@@ -11,7 +11,7 @@ if (navLinks) {
     if (loggedUser) {
         navLinks.innerHTML += `
             <a href="javascript:void(0)" class="nav_link" onclick="toggleProfile()">My Profile</a>
-            <a href="#" class="nav_link" onclick="localStorage.removeItem('user'); location.reload();">Logout</a>
+            <a href="index.html" class="nav_link" onclick="localStorage.removeItem('user');">Logout</a>
         `;
     } else {
         navLinks.innerHTML += `
