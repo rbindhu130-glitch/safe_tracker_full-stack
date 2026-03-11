@@ -22,15 +22,7 @@ if (navigator.geolocation) {
     vLng = pos.coords.longitude;
     console.log("Volunteer location updated:", vLat, vLng);
   }, (err) => {
-    console.error("Volunteer GPS error", err);
-    if (err.code === err.PERMISSION_DENIED) {
-      console.warn("Location permission denied. Distance features will be disabled.");
-      // Proactively show a one-time message if blocked
-      if (!sessionStorage.getItem("gps_denied_alerted")) {
-        alert("📍 Location access is blocked! \n\nTo see distances to incidents, please click the 'Lock/Tune' icon next to the URL bar and set Location to 'Allow', then refresh.");
-        sessionStorage.setItem("gps_denied_alerted", "true");
-      }
-    }
+    console.warn("Volunteer GPS error", err);
   }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
