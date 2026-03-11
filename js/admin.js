@@ -3,6 +3,26 @@ const hostname = window.location.hostname;
 const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
 const apiBase = isLocal ? `http://${hostname}:8500` : "";
 
+// --- TOAST NOTIFICATION SYSTEM ---
+function showToast(message, type = "success") {
+    let container = document.getElementById("toastContainer");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toastContainer";
+        container.className = "toast_container";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    const icon = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add("fade-out");
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
 async function fetchAllData() {
     try {
         // Fetch Users
@@ -112,7 +132,7 @@ async function approveVolunteer(id) {
     try {
         const res = await fetch(`${apiBase}/api/users/admin/approve/${id}`, { method: 'PUT' });
         if (res.ok) {
-            alert("Volunteer approved successfully!");
+            showToast("Volunteer approved successfully!");
             fetchAllData();
         }
     } catch (e) { console.error(e); }
@@ -139,7 +159,7 @@ async function deleteUser(id) {
     try {
         const res = await fetch(`${apiBase}/api/users/admin/user/${id}`, { method: 'DELETE' });
         if (res.ok) {
-            alert("User deleted");
+            showToast("User deleted");
             fetchAllData();
         }
     } catch (e) { console.error(e); }

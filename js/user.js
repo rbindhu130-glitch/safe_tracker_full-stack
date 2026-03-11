@@ -17,6 +17,25 @@ if (!user) {
     // Safety fallback for unknown roles
     window.location.href = "login.html";
 }
+// --- TOAST NOTIFICATION SYSTEM ---
+function showToast(message, type = "success") {
+    let container = document.getElementById("toastContainer");
+    if (!container) {
+        container = document.createElement("div");
+        container.id = "toastContainer";
+        container.className = "toast_container";
+        document.body.appendChild(container);
+    }
+    const toast = document.createElement("div");
+    toast.className = `toast ${type}`;
+    const icon = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
+    toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add("fade-out");
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
 
 const incidentForm = document.getElementById("incidentForm");
 const getMapBtn = document.querySelector(".get_map_btn");
@@ -185,7 +204,7 @@ async function loadRequests() {
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(req.status)) ?
                     `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}', '${req.status}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px;">
-                        <i class="fas fa-comments"></i> ${req.status === 'closed' ? 'View Chat History' : 'Chat with Volunteer'}
+                        <i class="fas fa-comments"></i> ${req.status === 'closed' ? 'History' : 'Chat with Volunteer'}
                      </button>` : ''}
                    ${(req.status === 'reported' || req.status === 'pending') ?
                     `<button class="delete_btn_icon" title="Cancel Request" onclick="deleteIncident('${req.id}')" style="background: none; border: none; color: #dc2626; font-size: 24px; cursor: pointer; padding: 0; transition: transform 0.2s; display: flex;">
@@ -238,7 +257,7 @@ async function confirmIncident(id, confirmed) {
             method: "PUT"
         });
         if (response.ok) {
-            alert(confirmed ? "Incident closed. Thank you!" : "Incident re-opened. We are re-assigning it.");
+            showToast(confirmed ? "Incident closed. Thank you!" : "Incident re-opened. We are re-assigned it.");
             loadRequests();
         }
     } catch (e) { console.error(e); }
@@ -264,12 +283,12 @@ incidentForm.addEventListener("submit", async (e) => {
         });
 
         if (response.ok) {
-            alert("Request submitted successfully!");
+            showToast("Request submitted successfully!");
             incidentForm.reset();
             loadRequests();
         } else {
             const result = await response.json();
-            alert("Error: " + (result.detail || "Unknown error"));
+            showToast("Error: " + (result.detail || "Unknown error"), "error");
         }
     } catch (error) { console.error(error); }
 });
@@ -279,7 +298,7 @@ async function deleteIncident(id) {
     try {
         const response = await fetch(`${apiBase}/api/users/incidents/${id}?user_id=${user.id}`, { method: "DELETE" });
         if (response.ok) {
-            alert("Request deleted");
+            showToast("Request deleted");
             loadRequests();
         }
     } catch (e) { console.error(e); }
@@ -340,7 +359,7 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
         if (res.ok) {
             const updatedUser = await res.json();
             localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
-            alert("Profile updated!");
+            showToast("Profile updated!");
             document.getElementById("editModal").classList.add("hidden");
             loadProfileData();
         }

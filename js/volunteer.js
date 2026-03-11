@@ -11,8 +11,26 @@ if (!user) {
   window.location.href = "user.html";
 } else if (user.role === "admin") {
   window.location.href = "admin.html";
-} else if (user.role !== "volunteer") {
-  window.location.href = "login.html";
+}
+
+// --- TOAST NOTIFICATION SYSTEM ---
+function showToast(message, type = "success") {
+  let container = document.getElementById("toastContainer");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "toastContainer";
+    container.className = "toast_container";
+    document.body.appendChild(container);
+  }
+  const toast = document.createElement("div");
+  toast.className = `toast ${type}`;
+  const icon = type === "success" ? "fa-check-circle" : "fa-exclamation-circle";
+  toast.innerHTML = `<i class="fas ${icon}"></i> <span>${message}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.classList.add("fade-out");
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 
 let isProcessing = false;
