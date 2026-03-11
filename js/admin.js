@@ -128,7 +128,11 @@ function showSection(section) {
     });
 }
 
+let isAdminProcessing = false;
+
 async function approveVolunteer(id) {
+    if (isAdminProcessing) return;
+    isAdminProcessing = true;
     try {
         const res = await fetch(`${apiBase}/api/users/admin/approve/${id}`, { method: 'PUT' });
         if (res.ok) {
@@ -136,6 +140,7 @@ async function approveVolunteer(id) {
             fetchAllData();
         }
     } catch (e) { console.error(e); }
+    finally { isAdminProcessing = false; }
 }
 
 function openImage(url) {
@@ -143,7 +148,7 @@ function openImage(url) {
     const modal = document.getElementById('imageModal');
     const img = document.getElementById('modalImg');
     if (!url) {
-        alert("No image available");
+        showToast("No image available", "error");
         return;
     }
     img.src = url;
@@ -155,7 +160,9 @@ function closeModal() {
 }
 
 async function deleteUser(id) {
+    if (isAdminProcessing) return;
     if (!confirm("Are you sure you want to delete this user?")) return;
+    isAdminProcessing = true;
     try {
         const res = await fetch(`${apiBase}/api/users/admin/user/${id}`, { method: 'DELETE' });
         if (res.ok) {
@@ -163,6 +170,7 @@ async function deleteUser(id) {
             fetchAllData();
         }
     } catch (e) { console.error(e); }
+    finally { isAdminProcessing = false; }
 }
 
 // Initial Load

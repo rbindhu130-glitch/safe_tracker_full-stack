@@ -285,6 +285,15 @@ function loadProfileData() {
 
 document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+  if (isProcessing) return;
+
+  const saveBtn = e.target.querySelector(".btn_save");
+  const originalText = saveBtn.innerHTML;
+
+  isProcessing = true;
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
   const user = JSON.parse(localStorage.getItem("user"));
   const formData = new FormData();
   formData.append("user_id", user.id);
@@ -308,6 +317,11 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
       loadProfileData();
     }
   } catch (err) { console.error(err); }
+  finally {
+    isProcessing = false;
+    saveBtn.disabled = false;
+    saveBtn.innerHTML = originalText;
+  }
 });
 
 loadIncidents();

@@ -1,14 +1,22 @@
 const loginForm = document.getElementById("loginForm");
+let isLoggingIn = false;
 
 loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (isLoggingIn) return;
+
+    const loginBtn = loginForm.querySelector("button[type='submit']");
+    const originalText = loginBtn.innerText;
+
+    isLoggingIn = true;
+    loginBtn.disabled = true;
+    loginBtn.innerText = "Logging in...";
 
     const formData = new FormData(loginForm);
 
     try {
         const hostname = window.location.hostname;
         const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-        // Use port 8500 when running locally
         const apiBase = isLocal ? `http://${hostname}:8500` : window.location.origin;
 
         const response = await fetch(`${apiBase}/api/users/login`, {
@@ -19,7 +27,6 @@ loginForm.addEventListener("submit", async (e) => {
         const data = await response.json();
 
         if (response.ok) {
-            alert("Login successful!");
             localStorage.setItem("user", JSON.stringify(data.user));
 
             if (data.user.role === "admin") {
@@ -35,5 +42,9 @@ loginForm.addEventListener("submit", async (e) => {
     } catch (error) {
         console.error("Error:", error);
         alert("Could not connect to server. Make sure backend is running.");
+    } finally {
+        isLoggingIn = false;
+        loginBtn.disabled = false;
+        loginBtn.innerText = originalText;
     }
 });

@@ -263,8 +263,18 @@ async function confirmIncident(id, confirmed) {
     } catch (e) { console.error(e); }
 }
 
+let isSubmitting = false;
 incidentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    
+    const submitBtn = incidentForm.querySelector(".submit");
+    const originalBtnText = submitBtn.innerHTML;
+    
+    isSubmitting = true;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
     const title = document.getElementById("select").value;
     const full_address = locationInput.value;
     const payload = {
@@ -290,11 +300,21 @@ incidentForm.addEventListener("submit", async (e) => {
             const result = await response.json();
             showToast("Error: " + (result.detail || "Unknown error"), "error");
         }
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+        console.error(error);
+        showToast("Connection error", "error");
+    } finally {
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+    }
 });
 
 async function deleteIncident(id) {
+    if (isSubmitting) return;
     if (!confirm("Are you sure you want to delete this request?")) return;
+    
+    isSubmitting = true;
     try {
         const response = await fetch(`${apiBase}/api/users/incidents/${id}?user_id=${user.id}`, { method: "DELETE" });
         if (response.ok) {
@@ -302,6 +322,7 @@ async function deleteIncident(id) {
             loadRequests();
         }
     } catch (e) { console.error(e); }
+    finally { isSubmitting = false; }
 }
 
 // Sidebar Logic
@@ -341,6 +362,15 @@ function loadProfileData() {
 
 document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    
+    const saveBtn = e.target.querySelector(".btn_save");
+    const originalText = saveBtn.innerHTML;
+    
+    isSubmitting = true;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
     const user = JSON.parse(localStorage.getItem("user"));
     const formData = new FormData();
     formData.append("user_id", user.id);
@@ -364,6 +394,11 @@ document.getElementById("editProfileForm").addEventListener("submit", async (e) 
             loadProfileData();
         }
     } catch (err) { console.error(err); }
+    finally {
+        isSubmitting = false;
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = originalText;
+    }
 });
 
 function openEditModal() { document.getElementById("editModal").classList.remove("hidden"); }

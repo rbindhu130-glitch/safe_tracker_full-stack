@@ -38,8 +38,13 @@ if (imageInput) {
     });
 }
 
+let isSigningUp = false;
 signupForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (isSigningUp) return;
+
+    const signupBtn = signupForm.querySelector("button[type='submit']");
+    const originalText = signupBtn.innerText;
 
     const formData = new FormData(signupForm);
     const roleValue = document.getElementById("role").value;
@@ -68,10 +73,13 @@ signupForm.addEventListener("submit", async (e) => {
     if (roleValue !== "volunteer") {
         formData.delete("image");
         formData.delete("address");
-
     } else if (!hasImage) {
         formData.delete("image");
     }
+
+    isSigningUp = true;
+    signupBtn.disabled = true;
+    signupBtn.innerText = "Signing up...";
 
     try {
         const hostname = window.location.hostname;
@@ -83,25 +91,22 @@ signupForm.addEventListener("submit", async (e) => {
             body: formData,
         });
 
-        // Read response as text first to handle non-JSON errors (like 500 Internal Server Error)
         const responseText = await response.text();
         let data;
         try {
             data = JSON.parse(responseText);
         } catch (e) {
             console.error("Non-JSON Response:", responseText);
-            alert("🛑 Server Error (Plain Text): " + responseText);
+            alert("🛑 Server Error: " + responseText);
             return;
         }
 
         if (response.ok) {
             if (roleValue === "user") {
-                // AUTO-LOGIN for Users
                 localStorage.setItem("user", JSON.stringify(data.user));
                 alert("Welcome to SafeTracker! You are now logged in.");
                 window.location.href = "user.html";
             } else {
-                // Volunteers still need to login/wait for approval
                 alert("Signup successful! Please login to your dashboard.");
                 window.location.href = "login.html";
             }
@@ -115,14 +120,15 @@ signupForm.addEventListener("submit", async (e) => {
                 } else {
                     errMsg = JSON.stringify(data.detail);
                 }
-            } else if (data && data.traceback) {
-                errMsg = "Internal Crash (see console)";
-                console.error("Server Traceback:", data.traceback);
             }
             alert("Signup failed: " + errMsg);
         }
     } catch (error) {
         console.error("Connection Error:", error);
-        alert("🔌 Could not connect to server. \n\n1. Check if backend is running. \n2. Make sure you are using http://" + window.location.hostname + ":8500");
+        alert("🔌 Could not connect to server. Check your connection.");
+    } finally {
+        isSigningUp = false;
+        signupBtn.disabled = false;
+        signupBtn.innerText = originalText;
     }
 });
