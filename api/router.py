@@ -57,30 +57,52 @@ def signup(
         if supabase_client:
             # Upload to Supabase Storage
             try:
+                # Ensure we are at the start of the file
+                image.file.seek(0)
                 file_content = image.file.read()
+                
                 # Upload to 'safetracker' bucket
-                supabase_client.storage.from_("safetracker").upload(
+                res = supabase_client.storage.from_("safetracker").upload(
                     path=file_name,
                     file=file_content,
                     file_options={"content-type": image.content_type, "upsert": "true"},
                 )
+                
                 # Get public URL
                 image_path = supabase_client.storage.from_(
                     "safetracker"
                 ).get_public_url(file_name)
+                
             except Exception as e:
                 print(f"Supabase upload error: {e}")
-                # Fallback to local if local dev
-                os.makedirs("uploads", exist_ok=True)
-                image_path = f"uploads/{clean_name}"
-                with open(image_path, "wb") as buffer:
-                    image.file.seek(0)
-                    shutil.copyfileobj(image.file, buffer)
+                # ONLY fallback to local if NOT on Vercel
+                if os.environ.get("VERCEL"):
+                    raise HTTPException(
+                        status_code=500, 
+                        detail=f"Deployment Storage Error: Could not upload to Supabase. Reason: {str(e)}"
+                    )
+                
+                # Local dev fallback
+                try:
+                    os.makedirs("uploads", exist_ok=True)
+                    image_path = f"uploads/{clean_name}"
+                    with open(image_path, "wb") as buffer:
+                        image.file.seek(0)
+                        shutil.copyfileobj(image.file, buffer)
+                except Exception as local_e:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Local Storage Error: {str(local_e)}"
+                    )
         else:
-            # Standard local storage fallback
+            # No Supabase configured
+            if os.environ.get("VERCEL"):
+                 raise HTTPException(status_code=500, detail="Cloud Storage (Supabase) not configured on Vercel.")
+            
             os.makedirs("uploads", exist_ok=True)
             image_path = f"uploads/{clean_name}"
             with open(image_path, "wb") as buffer:
+                image.file.seek(0)
                 shutil.copyfileobj(image.file, buffer)
 
     from sqlalchemy.exc import IntegrityError
