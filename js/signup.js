@@ -76,7 +76,7 @@ signupForm.addEventListener("submit", async (e) => {
     try {
         const hostname = window.location.hostname;
         const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-        const apiBase = isLocal ? `http://${hostname}:8501` : window.location.origin;
+        const apiBase = isLocal ? `http://${hostname}:8500` : window.location.origin;
 
         const response = await fetch(`${apiBase}/api/users/signup`, {
             method: "POST",

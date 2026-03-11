@@ -1,7 +1,7 @@
 // Helper to get API Base URL
 const hostname = window.location.hostname;
 const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-const apiBase = isLocal ? `http://${hostname}:8501` : "";
+const apiBase = isLocal ? `http://${hostname}:8500` : "";
 
 const incidentForm = document.getElementById("incidentForm");
 const user = JSON.parse(localStorage.getItem("user"));
@@ -184,12 +184,30 @@ async function loadRequests() {
                      </button>`
                     : ''}
                    ${(req.status === 'awaiting_confirmation') ?
-                    `<div style="display:flex; gap:5px; margin-top:5px;">
-                       <button title="Confirm Completion" onclick="confirmIncident('${req.id}', true)" style="background: #059669; border: none; color: white; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 14px; font-weight: bold;">
-                           ✔️ Confirm
+                    `<div style="display:flex; gap:8px; margin-top:8px; flex-wrap: wrap;">
+                       <button title="Confirm Completion" onclick="confirmIncident('${req.id}', true)" style="
+                          background: linear-gradient(135deg, #10b981, #059669);
+                          border: none; color: white; border-radius: 10px;
+                          padding: 8px 16px; cursor: pointer; font-size: 13px;
+                          font-weight: 600; font-family: 'Poppins', sans-serif;
+                          box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+                          display: flex; align-items: center; gap: 6px;
+                          transition: all 0.2s ease;
+                       " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(5,150,105,0.4)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(5,150,105,0.3)'">
+                          <i class="fas fa-check-circle"></i> Confirm
                        </button>
-                       <button title="Not Completed" onclick="confirmIncident('${req.id}', false)" style="background: #dc2626; border: none; color: white; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 14px; font-weight: bold;">
-                           ❌ No
+                       <button title="Not Completed" onclick="confirmIncident('${req.id}', false)" style="
+                          background: linear-gradient(135deg, #f87171, #dc2626);
+                          border: none; color: white; border-radius: 10px;
+                          padding: 8px 16px; cursor: pointer; font-size: 13px;
+                          font-weight: 600; font-family: 'Poppins', sans-serif;
+                          box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+                          display: flex; align-items: center; gap: 6px;
+                          transition: all 0.2s ease;
+                       " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 6px 16px rgba(220,38,38,0.4)'"
+                         onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(220,38,38,0.3)'">
+                          <i class="fas fa-times-circle"></i> Not Done
                        </button>
                      </div>`
                     : ''}

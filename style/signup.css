@@ -1,56 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
 :root {
-  --primary_blue: #1d4ed8;
-  --bg_color: #f0f4f8;
+  --primary_blue: #3b82f6;
+  --bg_color: #f8fafc;
+  --text_main: #1e293b;
+  --text_muted: #64748b;
+  --card_bg: #ffffff;
+  --card_border: #e2e8f0;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: poppins, sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 body {
   background-color: var(--bg_color);
+  color: var(--text_main);
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  padding: 40px 20px;
 }
 
 .Signup {
-  background-color: white;
+  background-color: var(--card_bg);
   padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  border: 1px solid var(--card_border);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   width: 100%;
   max-width: 450px;
+  animation: zoomIn 0.3s ease-out;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .Signup h2 {
   text-align: center;
-  margin-bottom: 25px;
-  color: var(--primary_blue);
-  font-size: 28px;
+  margin-bottom: 30px;
+  color: var(--text_main);
+  font-size: 26px;
+  font-weight: 700;
 }
 
 .Signup label {
   display: block;
   margin-bottom: 8px;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 500;
+  color: var(--text_muted);
+  font-size: 14px;
 }
 
-.Signup input, .Signup select {
+.Signup input,
+.Signup select {
   width: 100%;
-  padding: 12px;
+  padding: 14px 16px;
   margin-bottom: 20px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 16px;
+  background: var(--bg_color);
+  border: 1px solid var(--card_border);
+  border-radius: 12px;
+  font-size: 15px;
+  color: var(--text_main);
+  transition: 0.3s;
+}
+
+.Signup select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+}
+
+.Signup input:focus,
+.Signup select:focus {
+  outline: none;
+  border-color: var(--primary_blue);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
 #imageSection {
+  display: none;
+  /* Initially hidden */
+  margin-bottom: 20px;
   width: 100%;
 }
 
@@ -59,15 +107,16 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px !important;
-  border: 2px dashed #d1d5db;
-  border-radius: 8px;
-  background-color: #f9fafb;
+  padding: 24px !important;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background-color: var(--bg_color);
   cursor: pointer;
   transition: all 0.3s;
-  color: #6b7280;
+  color: var(--text_muted);
   text-align: center;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .custom-file-upload:hover {
@@ -77,7 +126,17 @@ body {
 }
 
 .custom-file-upload i {
-  font-size: 24px;
+  font-size: 28px;
+  color: #94a3b8;
+  transition: 0.3s;
+}
+
+.custom-file-upload:hover i {
+  color: var(--primary_blue);
+}
+
+.hidden_input {
+  display: none;
 }
 
 .Signup button {
@@ -86,36 +145,35 @@ body {
   background-color: var(--primary_blue);
   color: white;
   border: none;
-  border-radius: 8px;
-  font-size: 18px;
+  border-radius: 12px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: 0.3s;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+  margin-top: 10px;
 }
 
 .Signup button:hover {
-  background-color: #1e40af;
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.3);
 }
 
 .login {
   text-align: center;
-  margin-top: 20px;
-  color: #6b7280;
+  margin-top: 25px;
+  color: var(--text_muted);
+  font-size: 14px;
 }
 
 .login a {
   color: var(--primary_blue);
   text-decoration: none;
   font-weight: 600;
+  transition: 0.3s;
 }
 
-#imageSection {
-    display: none; /* Initially hidden */
-    margin-bottom: 20px;
+.login a:hover {
+  text-decoration: underline;
 }
-
-.hidden_input {
-    display: none;
-}
-
-

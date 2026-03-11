@@ -1,6 +1,7 @@
 .main_footer {
-    background-color: #0f172a;
-    color: white;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    color: #1e293b;
     padding: 60px 0 20px;
     margin-top: auto;
     width: 100%;
@@ -16,7 +17,7 @@
 }
 
 .footer_section h4 {
-    color: white;
+    color: #1e293b;
     font-size: 18px;
     margin-bottom: 20px;
     font-weight: 700;
@@ -27,7 +28,7 @@
     align-items: center;
     gap: 10px;
     text-decoration: none;
-    color: white;
+    color: #1e293b;
     font-size: 24px;
     font-weight: 800;
     margin-bottom: 15px;
@@ -38,7 +39,7 @@
 }
 
 .footer_section p {
-    color: #94a3b8;
+    color: #64748b;
     font-size: 14px;
     line-height: 1.6;
 }
@@ -52,7 +53,7 @@
 }
 
 .footer_links a {
-    color: #94a3b8;
+    color: #64748b;
     text-decoration: none;
     font-size: 14px;
     transition: color 0.3s;
@@ -68,29 +69,33 @@
 }
 
 .social_links a {
-    width: 36px;
-    height: 36px;
-    background: #1e293b;
-    color: white;
+    width: 38px;
+    height: 38px;
+    background: #f8fafc;
+    color: #64748b;
     display: flex;
     justify-content: center;
     align-items: center;
     border-radius: 50%;
     text-decoration: none;
     transition: all 0.3s;
+    border: 1px solid #e2e8f0;
 }
 
 .social_links a:hover {
     background: #3b82f6;
+    color: white;
     transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(59, 130, 246, 0.2);
+    border-color: transparent;
 }
 
 .footer_bottom {
     text-align: center;
     margin-top: 50px;
     padding-top: 20px;
-    border-top: 1px solid #1e293b;
-    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    color: #94a3b8;
     font-size: 13px;
 }
 
@@ -99,8 +104,9 @@
         grid-template-columns: 1fr;
         text-align: center;
     }
-    
-    .footer_logo, .social_links {
+
+    .footer_logo,
+    .social_links {
         justify-content: center;
     }
 }

@@ -1,7 +1,7 @@
 // Chat Core Logic
 const chat_hostname = window.location.hostname;
 const chat_isLocal = chat_hostname === "127.0.0.1" || chat_hostname === "localhost" || chat_hostname.startsWith("192.168.") || chat_hostname.startsWith("10.") || chat_hostname.startsWith("172.");
-const chat_apiBase = chat_isLocal ? `http://${chat_hostname}:8501` : "";
+const chat_apiBase = chat_isLocal ? `http://${chat_hostname}:8500` : "";
 const chat_user = JSON.parse(localStorage.getItem("user"));
 
 let currentChatIncidentId = null;
