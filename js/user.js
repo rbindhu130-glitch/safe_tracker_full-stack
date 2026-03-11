@@ -295,6 +295,28 @@ incidentForm.addEventListener("submit", async (e) => {
         if (response.ok) {
             showToast("Request submitted successfully!");
             incidentForm.reset();
+            
+            // --- FULL RESET OF LOCATION DATA ---
+            currentLat = null;
+            currentLng = null;
+            
+            // Stop GPS tracking if active
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+
+            // Restore "Get Map" button to original state
+            getMapBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Map';
+            getMapBtn.style.background = "var(--primary, #3b82f6)";
+
+            // Clear Map Marker and reset view
+            if (marker) {
+                map.removeLayer(marker);
+                marker = null;
+            }
+            map.setView([20.5937, 78.9629], 5); // Back to India default
+
             loadRequests();
         } else {
             const result = await response.json();
