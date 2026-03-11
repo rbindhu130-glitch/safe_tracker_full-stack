@@ -177,18 +177,19 @@ async function loadIncidents() {
         const div = document.createElement("div");
         div.className = "completed_incident";
         const displayStatus = incident.status === "awaiting_confirmation" ? "Awaiting User Confirmation" : incident.status;
-        const statusColor = incident.status === "closed" ? "green" : "purple";
-
+        const statusBg = incident.status === "closed" ? "#16a34a" : "#6366f1";
         div.innerHTML = `
-              <div>
+              <div style="flex: 1;">
                 <p><strong>${incident.title}</strong></p>
-                <p style="font-size:13px">User: ${incident.reporter_name || 'Anonymous'}</p>
+                <p style="font-size:13px; color:#64748b;">User: ${incident.reporter_name || 'Anonymous'}</p>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(incident.status)) ?
-            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:5px;">
+            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:8px;">
                         <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'History' : 'Chat'}
                      </button>` : ''}
               </div>
-              <div class="status" style="background:${statusColor}; color: white; border:none;">${displayStatus.toUpperCase()}</div>
+              <div class="status" style="background:${statusBg}; color: white; border:none; font-weight:700; font-size:11px; min-width:90px; text-align:center;">
+                ${displayStatus.toUpperCase()}
+              </div>
             `;
         historyList.appendChild(div);
       }
