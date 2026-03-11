@@ -42,7 +42,7 @@ const getMapBtn = document.querySelector(".get_map_btn");
 const locationInput = document.getElementById("location");
 
 // Initialize Fast Leaflet Map
-let map = L.map('map').setView([20.5937, 78.9629], 5); // Default to India
+let map = L.map('map').setView([13.0827, 80.2707], 11); // Default to Chennai
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
@@ -315,7 +315,7 @@ incidentForm.addEventListener("submit", async (e) => {
                 map.removeLayer(marker);
                 marker = null;
             }
-            map.setView([20.5937, 78.9629], 5); // Back to India default
+            map.setView([13.0827, 80.2707], 11); // Back to Chennai default
 
             loadRequests();
         } else {
