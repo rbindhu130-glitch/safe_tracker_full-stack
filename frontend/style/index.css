@@ -16,14 +16,22 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
+  outline: none;
 }
 
-html, body {
+html {
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
   background-color: var(--bg_color);
   background-image:
     radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
@@ -31,7 +39,6 @@ body {
   color: var(--text_main);
   min-height: 100vh;
   position: relative;
-  overflow-x: hidden;
 }
 
 body::before,
@@ -94,6 +101,7 @@ body::after {
   color: var(--text_main);
   font-size: 28px;
   transition: transform 0.3s ease;
+  outline: none; /* Removes the black border/outline */
 }
 
 .logo_nav:hover {
@@ -140,6 +148,7 @@ body::after {
   padding: 80px 20px;
   position: relative;
   z-index: 1;
+  max-width: 100%;
 }
 
 .hero_logo {
@@ -292,37 +301,96 @@ body::after {
 }
 
 @media (max-width: 768px) {
+  .header_nav {
+    padding: 12px 15px;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .logo_nav {
+    gap: 8px;
+  }
+
+  .logo_nav h2 {
+    font-size: 18px;
+  }
+
+  .logo_nav i {
+    font-size: 20px;
+  }
+
+  .nav_links {
+    display: flex;
+    gap: 12px;
+    width: auto;
+    margin: 0;
+    border: none;
+    padding: 0;
+  }
+
+  .nav_link {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .containar {
+    padding: 40px 15px;
+    gap: 20px;
+  }
+
+  .hero_logo {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
   .hero_logo h1 {
-    font-size: 40px;
+    font-size: 36px;
+  }
+
+  .hero_logo i {
+    font-size: 48px;
   }
 
   .subtitle {
-    font-size: 16px;
+    font-size: 14px;
+    padding: 0 10px;
+  }
+
+  .portal_wrapper {
+    gap: 20px;
+    padding: 0 10px;
   }
 
   .card_role {
     width: 100%;
-    max-width: 380px;
+    padding: 30px 20px;
   }
 
-  .profile_sidebar {
-    width: 100%;
-    right: -100%;
+  .icon_box_circle {
+    width: 70px;
+    height: 70px;
+    margin-bottom: 20px;
   }
 
-  .header_nav {
-    padding: 15px 20px;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 15px;
+  .icon_box_circle i {
+    font-size: 30px;
   }
 
-  .nav_links {
-    gap: 15px;
-  }
-
-  .logo_nav h2 {
+  .card_role h2 {
     font-size: 20px;
+  }
+
+  .card_role p {
+    font-size: 13px;
+    margin-bottom: 25px;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero_logo h1 {
+    font-size: 28px;
   }
 }
 

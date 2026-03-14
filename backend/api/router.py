@@ -276,12 +276,24 @@ def update_incident(
 
 
 @router.get("/incidents")
-def get_incidents(db: Session = Depends(get_db)):
+def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
         incidents = db.query(Incident).all()
         response = []
         for inc in incidents:
             try:
+                unread_count = 0
+                if user_id:
+                    unread_count = (
+                        db.query(ChatMessage)
+                        .filter(
+                            ChatMessage.incident_id == inc.id,
+                            ChatMessage.sender_id != user_id,
+                            ChatMessage.is_read == False,
+                        )
+                        .count()
+                    )
+
                 inc_data = schemas.IncidentResponse.model_validate(inc)
                 inc_data.reporter_name = (
                     inc.reporter.username if inc.reporter else "Unknown"
@@ -289,6 +301,7 @@ def get_incidents(db: Session = Depends(get_db)):
                 inc_data.volunteer_name = (
                     inc.volunteer.username if inc.volunteer else "Waiting..."
                 )
+                inc_data.unread_count = unread_count
                 response.append(inc_data)
             except Exception as inner_e:
                 print(
@@ -307,6 +320,17 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
         response = []
         for inc in incidents:
             try:
+                # Count unread messages not sent by the reporter
+                unread_count = (
+                    db.query(ChatMessage)
+                    .filter(
+                        ChatMessage.incident_id == inc.id,
+                        ChatMessage.sender_id != user_id,
+                        ChatMessage.is_read == False,
+                    )
+                    .count()
+                )
+                
                 inc_data = schemas.IncidentResponse.model_validate(inc)
                 inc_data.reporter_name = (
                     inc.reporter.username if inc.reporter else "Unknown"
@@ -314,6 +338,7 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
                 inc_data.volunteer_name = (
                     inc.volunteer.username if inc.volunteer else "Waiting..."
                 )
+                inc_data.unread_count = unread_count
                 response.append(inc_data)
             except Exception as inner_e:
                 print(
@@ -577,3 +602,22 @@ def post_chat_message(
     m_data = schemas.ChatMessageResponse.model_validate(db_msg)
     m_data.sender_name = db_msg.sender.username if db_msg.sender else "Unknown"
     return m_data
+
+
+@router.put("/incidents/{incident_id}/chat/read")
+def mark_chat_as_read(
+    incident_id: int, user_id: int = Query(...), db: Session = Depends(get_db)
+):
+    messages = (
+        db.query(ChatMessage)
+        .filter(
+            ChatMessage.incident_id == incident_id,
+            ChatMessage.sender_id != user_id,
+            ChatMessage.is_read == False,
+        )
+        .all()
+    )
+    for msg in messages:
+        msg.is_read = True
+    db.commit()
+    return {"message": "Messages marked as read"}

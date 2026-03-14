@@ -55,6 +55,7 @@ class IncidentResponse(IncidentBase):
     volunteer_id: Optional[int] = None
     reporter_name: Optional[str] = None
     volunteer_name: Optional[str] = None
+    unread_count: int = 0
 
     class Config:
         from_attributes = True
@@ -122,6 +123,7 @@ class ChatMessageResponse(ChatMessageBase):
     id: int
     timestamp: datetime
     sender_name: Optional[str] = None
+    is_read: bool
 
     class Config:
         from_attributes = True

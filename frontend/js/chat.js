@@ -34,10 +34,22 @@ function openChat(incidentId, title, status) {
 
     // Immediate fetch
     fetchChatHistory();
+    markAsRead(incidentId);
 
     // Start polling every 3 seconds
     if (chatPollInterval) clearInterval(chatPollInterval);
     chatPollInterval = setInterval(fetchChatHistory, 3000);
+}
+
+async function markAsRead(incidentId) {
+    try {
+        await fetch(`${chat_apiBase}/api/users/incidents/${incidentId}/chat/read?user_id=${chat_user.id}`, {
+            method: "PUT"
+        });
+        // We don't call loadRequests/loadIncidents here because they run on intervals
+    } catch (e) {
+        console.error("Error marking messages as read:", e);
+    }
 }
 
 function closeChat() {
@@ -82,6 +94,7 @@ async function fetchChatHistory() {
 
         if (newMessagesFound) {
             scrollToBottom();
+            markAsRead(currentChatIncidentId);
         }
     } catch (err) {
         console.error("Chat polling error:", err);

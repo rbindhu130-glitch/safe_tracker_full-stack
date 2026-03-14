@@ -62,6 +62,7 @@ class ChatMessage(Base):
     sender_id = Column(Integer, ForeignKey("users.id"))
     message = Column(String)
     timestamp = Column(DateTime, default=datetime.utcnow)
+    is_read = Column(Boolean, default=False)
 
     incident = relationship("Incident", back_populates="messages")
     sender = relationship("User")

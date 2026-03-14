@@ -65,7 +65,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 async function loadIncidents() {
   try {
-    const url = `${apiBase}/api/users/incidents`;
+    const url = `${apiBase}/api/users/incidents?user_id=${user.id}`;
     const response = await fetch(url);
     if (!response.ok) {
       console.error("Failed to fetch incidents:", response.status);
@@ -144,8 +144,9 @@ async function loadIncidents() {
                    <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
                    ${distHtml}
                     <p class="request_meta">${incident.full_address || 'No location'}</p>
-                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')">
+                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="position: relative;">
                         <i class="fas fa-comments"></i> Chat with User
+                        ${incident.unread_count > 0 ? `<span class="chat_badge">${incident.unread_count}</span>` : ''}
                     </button>
                     <div id="${mapId}" class="volunteer_map" style="margin-top: 10px; width: 100%; height: 200px; border-radius: 8px;"></div>
                     <div style="margin-top: 15px; display: flex; justify-content: center;">
@@ -201,8 +202,9 @@ async function loadIncidents() {
                 <p><strong>${incident.title}</strong></p>
                 <p style="font-size:13px; color:#64748b;">User: ${incident.reporter_name || 'Anonymous'}</p>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(incident.status)) ?
-            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:8px;">
+            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:8px; position: relative;">
                         <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'History' : 'Chat'}
+                        ${incident.unread_count > 0 ? `<span class="chat_badge">${incident.unread_count}</span>` : ''}
                      </button>` : ''}
               </div>
               <div class="status" style="background:${statusBg}; color: white; border:none; font-weight:700; font-size:11px; min-width:90px; text-align:center;">

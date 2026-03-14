@@ -203,8 +203,9 @@ async function loadRequests() {
                 <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 100px;">
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(req.status)) ?
-                    `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}', '${req.status}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px;">
+                    `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}', '${req.status}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px; position: relative;">
                         <i class="fas fa-comments"></i> ${req.status === 'closed' ? 'History' : 'Chat with Volunteer'}
+                        ${req.unread_count > 0 ? `<span class="chat_badge">${req.unread_count}</span>` : ''}
                      </button>` : ''}
                    ${(req.status === 'reported' || req.status === 'pending') ?
                     `<button class="delete_btn_icon" title="Cancel Request" onclick="deleteIncident('${req.id}')" style="background: none; border: none; color: #dc2626; font-size: 24px; cursor: pointer; padding: 0; transition: transform 0.2s; display: flex;">

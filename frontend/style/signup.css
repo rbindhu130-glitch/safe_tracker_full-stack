@@ -55,6 +55,49 @@ body {
   }
 }
 
+.back_home {
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  text-decoration: none;
+  background: white;
+  color: var(--text_main);
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  z-index: 10;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(8px);
+}
+
+.back_home:hover {
+  transform: translateX(-5px);
+  color: var(--primary_blue);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1);
+}
+
+@media (max-width: 768px) {
+  body {
+    align-items: flex-start;
+    padding: 80px 15px 40px;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  .back_home {
+    top: 20px;
+    left: 20px;
+    padding: 8px 15px;
+    font-size: 13px;
+  }
+}
+
 .Signup h2 {
   text-align: center;
   margin-bottom: 30px;

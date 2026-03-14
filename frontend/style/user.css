@@ -20,11 +20,22 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
+  outline: none;
 }
 
-html, body {
+html {
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -531,22 +542,103 @@ body::after {
 }
 
 @media (max-width: 768px) {
-  .header_nav { padding: 15px 20px; flex-wrap: wrap; justify-content: center; gap: 15px; }
-  .nav_links { gap: 15px; justify-content: center; flex-wrap: wrap; }
-  .nav_link { font-size: 14px; }
-  .logo_nav h2 { font-size: 20px; }
-  .main_container, .requests_container { padding: 10px; margin-top: 20px; margin-bottom: 60px; }
-  .toast_container { right: 10px; left: 10px; bottom: 20px; }
-  .toast { min-width: unset; width: 100%; }
-  .request_item, .completed_incident { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .action_buttons { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
-  .incident_status { width: 100%; text-align: center; margin-top: 10px; }
-  .tracker_steps { overflow-x: auto; padding-bottom: 15px; }
+  .header_nav {
+    padding: 12px 15px;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .nav_links {
+    display: flex;
+    gap: 12px;
+    width: auto;
+    margin: 0;
+    border: none;
+    padding: 0;
+  }
+
+  .nav_link {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .logo_nav h2 {
+    font-size: 18px;
+  }
+
+  .main_container,
+  .requests_container {
+    flex-direction: column;
+    padding: 15px;
+    margin: 10px auto 30px;
+    gap: 20px;
+  }
+
+  .request_box,
+  .card,
+  .incidents,
+  .completed {
+    padding: 20px 15px;
+    width: 100%;
+  }
+
+  .request_item,
+  .completed_incident {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .request_info {
+    width: 100%;
+  }
+
+  .action_buttons {
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 5px;
+  }
+
+  .incident_status {
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+  }
+
+  .status_tracker_container {
+    padding: 15px 0 5px;
+  }
+
+  .tracker_steps {
+    overflow-x: auto;
+    padding-bottom: 20px;
+    gap: 10px;
+  }
+
+  .step {
+    min-width: 80px;
+  }
+
+  .profile_sidebar {
+    width: 100%;
+    right: -100%;
+  }
+
+  .sidebar_content {
+    padding: 50px 20px 20px;
+  }
 }
 
-@media (max-width: 480px) { 
-  .profile_sidebar { width: 100%; right: -100%; } 
-  .request_box h2, .card h2, .incidents h2, .completed h2 { font-size: 18px; }
+@media (max-width: 480px) {
+  .request_box h2,
+  .card h2 {
+    font-size: 18px;
+  }
+
+  .beta_badge {
+    display: none;
+  }
 }
 /* ========== TOAST NOTIFICATIONS ========== */
 .toast_container {
@@ -590,4 +682,32 @@ body::after {
   transform: translateX(120%);
   opacity: 0;
   transition: 0.3s;
+}
+
+/* CHAT BADGE */
+.chat_btn {
+  position: relative;
+}
+
+.chat_badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  border: 2px solid white;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+  animation: pulseBadge 1.5s infinite;
+}
+
+@keyframes pulseBadge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }

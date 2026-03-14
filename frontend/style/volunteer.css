@@ -20,11 +20,22 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
+  outline: none;
 }
 
-html, body {
+html {
   width: 100%;
   max-width: 100%;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
@@ -508,22 +519,92 @@ body::after {
 }
 
 @media (max-width: 768px) {
-  .header_nav { padding: 15px 20px; flex-wrap: wrap; justify-content: center; gap: 15px; }
-  .nav_links { gap: 15px; justify-content: center; flex-wrap: wrap; }
-  .nav_link, .nav_links a { font-size: 14px; }
-  .logo_nav h2 { font-size: 20px; }
-  .requests_container { padding: 10px; margin-top: 20px; margin-bottom: 60px; }
-  .toast_container { right: 10px; left: 10px; bottom: 20px; }
-  .toast { min-width: unset; width: 100%; }
-  .request, .completed_incident { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .request_row { flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; }
-  .incident_status { width: 100%; text-align: center; margin-top: 10px; }
-  .chat_btn { width: 100%; justify-content: center; margin-top: 10px; }
+  .header_nav {
+    padding: 12px 15px;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .nav_links {
+    display: flex;
+    gap: 12px;
+    width: auto;
+    margin: 0;
+    border: none;
+    padding: 0;
+  }
+
+  .nav_link, .nav_links a {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .logo_nav h2 {
+    font-size: 18px;
+  }
+
+  .requests_container {
+    flex-direction: column;
+    padding: 15px;
+    margin: 10px auto 30px;
+    gap: 20px;
+  }
+
+  .incidents,
+  .completed {
+    padding: 20px 15px;
+    width: 100%;
+    min-height: auto;
+  }
+
+  .request,
+  .completed_incident {
+    padding: 15px;
+  }
+
+  .request_row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+    width: 100%;
+  }
+
+  .request_info {
+    width: 100%;
+  }
+
+  .incident_status {
+    width: 100%;
+    text-align: center;
+    padding: 12px;
+  }
+
+  .chat_btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px;
+  }
+
+  .status_badge {
+    margin-bottom: 5px;
+    display: inline-block;
+  }
+
+  .profile_sidebar {
+    width: 100%;
+    right: -100%;
+  }
+
+  .sidebar_content {
+    padding: 50px 20px 20px;
+  }
 }
 
 @media (max-width: 480px) {
-  .profile_sidebar { width: 100%; right: -100%; }
-  .incidents h2, .completed h2 { font-size: 18px; }
+  .incidents h2,
+  .completed h2 {
+    font-size: 18px;
+  }
 }
 /* ========== TOAST NOTIFICATIONS ========== */
 .toast_container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
@@ -534,3 +615,27 @@ body::after {
 .toast.error i { color: #ef4444; }
 @keyframes slideInToast { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 .toast.fade-out { transform: translateX(120%); opacity: 0; transition: 0.3s; }
+
+/* CHAT BADGE */
+.chat_badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 800;
+  border: 2px solid white;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
+  animation: pulseBadge 1.5s infinite;
+}
+
+@keyframes pulseBadge {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}

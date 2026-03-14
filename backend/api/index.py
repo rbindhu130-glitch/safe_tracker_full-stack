@@ -108,6 +108,7 @@ async def websocket_endpoint(websocket: WebSocket, incident_id: int, user_id: in
                 "sender_name": sender_name,
                 "message": db_msg.message,
                 "timestamp": db_msg.timestamp.isoformat(),
+                "is_read": db_msg.is_read,
             }
             await manager.broadcast(broadcast_data, incident_id)
     except WebSocketDisconnect:
