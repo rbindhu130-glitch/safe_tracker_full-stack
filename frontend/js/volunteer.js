@@ -99,10 +99,10 @@ async function loadIncidents() {
       console.log(`Checking Incident ${incident.id}: "${incidentAddr}" against Volunteer Keywords: [${volAddrWords}] -> Match: ${isLocationMatch}`);
 
       if ((incident.status === "reported" || incident.status === "pending") && !incident.volunteer_id) {
-        // Restore strict location filter: only show incidents that match volunteer's base location keywords
-        if (!isLocationMatch) return;
-
-        const nearbyBadge = volAddrWords.length > 0 ? '<span class="nearby_badge">Nearby</span> ' : '';
+        // Log for debugging
+        console.log(`Incident ${incident.id} found. Location Match: ${isLocationMatch}`);
+        
+        const nearbyBadge = isLocationMatch && volAddrWords.length > 0 ? '<span class="nearby_badge">Nearby</span> ' : '';
 
         const div = document.createElement("div");
         div.className = "request";

@@ -284,15 +284,18 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
             try:
                 unread_count = 0
                 if user_id:
-                    unread_count = (
-                        db.query(ChatMessage)
-                        .filter(
-                            ChatMessage.incident_id == inc.id,
-                            ChatMessage.sender_id != user_id,
-                            ChatMessage.is_read == False,
+                    try:
+                        unread_count = (
+                            db.query(ChatMessage)
+                            .filter(
+                                ChatMessage.incident_id == inc.id,
+                                ChatMessage.sender_id != user_id,
+                                (ChatMessage.is_read == False) | (ChatMessage.is_read == None),
+                            )
+                            .count()
                         )
-                        .count()
-                    )
+                    except Exception as e:
+                        print(f"Unread count error: {e}")
 
                 inc_data = schemas.IncidentResponse.model_validate(inc)
                 inc_data.reporter_name = (
@@ -320,16 +323,20 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
         response = []
         for inc in incidents:
             try:
-                # Count unread messages not sent by the reporter
-                unread_count = (
-                    db.query(ChatMessage)
-                    .filter(
-                        ChatMessage.incident_id == inc.id,
-                        ChatMessage.sender_id != user_id,
-                        ChatMessage.is_read == False,
+                unread_count = 0
+                try:
+                    # Count unread messages not sent by the reporter
+                    unread_count = (
+                        db.query(ChatMessage)
+                        .filter(
+                            ChatMessage.incident_id == inc.id,
+                            ChatMessage.sender_id != user_id,
+                            (ChatMessage.is_read == False) | (ChatMessage.is_read == None),
+                        )
+                        .count()
                     )
-                    .count()
-                )
+                except Exception as e:
+                    print(f"User unread count error: {e}")
                 
                 inc_data = schemas.IncidentResponse.model_validate(inc)
                 inc_data.reporter_name = (
