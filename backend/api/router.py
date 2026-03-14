@@ -620,7 +620,7 @@ def mark_chat_as_read(
         .filter(
             ChatMessage.incident_id == incident_id,
             ChatMessage.sender_id != user_id,
-            ChatMessage.is_read == False,
+            ChatMessage.is_read.is_(False),
         )
         .all()
     )
