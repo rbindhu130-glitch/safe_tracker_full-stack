@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import shutil
 import os
-from api.database import get_db, supabase_client
-from api.models import User, Incident, Complaint, ChatMessage
-from api.schemas import IncidentUpdate
-from api import schemas
+from .database import get_db, supabase_client
+from .models import User, Incident, Complaint, ChatMessage
+from .schemas import IncidentUpdate
+from . import schemas
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -290,7 +290,7 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
                             .filter(
                                 ChatMessage.incident_id == inc.id,
                                 ChatMessage.sender_id != user_id,
-                                (ChatMessage.is_read == False) | (ChatMessage.is_read == None),
+                                (ChatMessage.is_read.is_(False)) | (ChatMessage.is_read.is_(None)),
                             )
                             .count()
                         )
@@ -331,7 +331,7 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
                         .filter(
                             ChatMessage.incident_id == inc.id,
                             ChatMessage.sender_id != user_id,
-                            (ChatMessage.is_read == False) | (ChatMessage.is_read == None),
+                            (ChatMessage.is_read.is_(False)) | (ChatMessage.is_read.is_(None)),
                         )
                         .count()
                     )
