@@ -4,6 +4,10 @@
     {
       "src": "backend/api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
     }
   ],
   "rewrites": [
@@ -13,15 +17,11 @@
     },
     {
       "source": "/",
-      "destination": "/frontend/index.html"
-    },
-    {
-      "source": "/(style|js|assets|pages)/(.*)",
-      "destination": "/frontend/$1/$2"
+      "destination": "frontend/index.html"
     },
     {
       "source": "/(.*)",
-      "destination": "/frontend/$1"
+      "destination": "frontend/$1"
     }
   ]
 }
