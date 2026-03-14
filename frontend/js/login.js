@@ -37,7 +37,7 @@ loginForm.addEventListener("submit", async (e) => {
                 window.location.href = "user.html";
             }
         } else {
-            alert("Login failed: " + (data.detail || "Invalid credentials"));
+            alert(data.detail || "Login failed. Please sign up first.");
         }
     } catch (error) {
         console.error("Error:", error);

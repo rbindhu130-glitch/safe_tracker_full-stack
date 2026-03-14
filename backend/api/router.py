@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, Query
-from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import shutil
@@ -62,7 +61,7 @@ def signup(
                 file_content = image.file.read()
                 
                 # Upload to 'safetracker' bucket
-                res = supabase_client.storage.from_("safetracker").upload(
+                supabase_client.storage.from_("safetracker").upload(
                     path=file_name,
                     file=file_content,
                     file_options={"content-type": image.content_type, "upsert": "true"},
@@ -158,13 +157,33 @@ def update_user(
 def login(
     username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)
 ):
+    # HARDCODED SUPERADMIN LOGIN
+    if username == "superadmin" and password == "admin123":
+        return {
+            "message": "Login successful",
+            "user": {
+                "id": 0,
+                "username": "superadmin",
+                "email": "superadmin@safetracker.com",
+                "mobile": "0000000000",
+                "role": "admin",
+                "address": "System",
+                "is_approved": True,
+                "profile_image": None
+            },
+        }
+
     user = (
         db.query(User)
         .filter(User.username == username, User.password == password)
         .first()
     )
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid credentials")
+        raise HTTPException(status_code=400, detail="User or volunteer not found. Please sign up first.")
+
+    # Prevent accidental admin role from database if not using superadmin credentials
+    if user.role == "admin" and (username != "superadmin" or password != "admin123"):
+        raise HTTPException(status_code=400, detail="Invalid admin credentials")
 
     if user.role == "volunteer" and not user.is_approved:
         raise HTTPException(
@@ -372,42 +391,7 @@ def confirm_incident(incident_id: int, confirmed: bool, db: Session = Depends(ge
     return {"message": "Response recorded", "status": incident.status}
 
 
-@router.get("/incidents/{incident_id}/verify", response_class=HTMLResponse)
-def verify_incident_email(incident_id: int, choice: str, db: Session = Depends(get_db)):
-    incident = db.query(Incident).filter(Incident.id == incident_id).first()
-    if not incident:
-        return HTMLResponse(content="<h1>Incident not found</h1>", status_code=404)
-
-    if choice == "yes":
-        incident.status = "closed"
-        msg = f"""
-        <html>
-            <body style='text-align:center; padding:50px; font-family:sans-serif;'>
-                <h1 style='color:green;'>✔️ Incident Closed</h1>
-                <p>Thank you! The incident '{incident.title}' has been successfully closed.</p>
-                <a href="/pages/user.html">Go to Dashboard</a>
-            </body>
-        </html>
-        """
-    else:
-        # User selected NO
-        # Per user request: "illa awaiting confirmation nu irukanum" (Else remain awaiting/or not closed)
-        # We will keep it as 'awaiting_confirmation' (so status doesn't change from what volunteer set)
-
-        msg = """
-        <html>
-            <body style='text-align:center; padding:50px; font-family:sans-serif;'>
-                <h1 style='color:orange;'>⚠️ Confirmation Pending</h1>
-                <p>You have selected <b>NO</b>.</p>
-                <p>The incident status remains 'Awaiting Confirmation'.</p>
-                <p>Please contact the volunteer if the work is not finished.</p>
-                <a href="/pages/user.html">Go to Dashboard</a>
-            </body>
-        </html>
-        """
-
-    db.commit()
-    return HTMLResponse(content=msg)
+# Removed verify_incident_email endpoint as it is unused without SMTP configuration.
 
 
 @router.get("/available-incidents", response_model=List[schemas.IncidentResponse])

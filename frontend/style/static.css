@@ -15,6 +15,11 @@
   font-family: 'poppins', sans-serif;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100%;
+}
+
 body {
   background-color: var(--bg_color);
   color: var(--text_dark);
@@ -171,5 +176,14 @@ body {
 @media (max-width: 768px) {
   .contact_wrapper {
     grid-template-columns: 1fr;
+  }
+  .page_header h1 {
+    font-size: 32px;
+  }
+  .about_section, .contact_form, .contact_info {
+    padding: 25px;
+  }
+  .about_section h2 {
+    font-size: 24px;
   }
 }

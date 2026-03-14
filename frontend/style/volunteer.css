@@ -22,6 +22,11 @@
   font-family: 'Poppins', sans-serif;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100%;
+}
+
 body {
   background-color: var(--bg);
   background-image:
@@ -345,7 +350,7 @@ body::after {
 
 /* ========== RIGHT SIDEBAR PROFILE ========== */
 .profile_sidebar {
-  position: fixed; top: 0; right: -420px; width: 400px; height: 100vh;
+  position: fixed; top: 0; right: -420px; width: 400px; max-width: 100%; height: 100vh;
   background: white; border-left: 1px solid var(--border);
   box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08); z-index: 2000;
   transition: right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -502,9 +507,23 @@ body::after {
   .incidents, .completed { width: 100%; }
 }
 
+@media (max-width: 768px) {
+  .header_nav { padding: 15px 20px; flex-wrap: wrap; justify-content: center; gap: 15px; }
+  .nav_links { gap: 15px; justify-content: center; flex-wrap: wrap; }
+  .nav_link, .nav_links a { font-size: 14px; }
+  .logo_nav h2 { font-size: 20px; }
+  .requests_container { padding: 10px; margin-top: 20px; margin-bottom: 60px; }
+  .toast_container { right: 10px; left: 10px; bottom: 20px; }
+  .toast { min-width: unset; width: 100%; }
+  .request, .completed_incident { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .request_row { flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; }
+  .incident_status { width: 100%; text-align: center; margin-top: 10px; }
+  .chat_btn { width: 100%; justify-content: center; margin-top: 10px; }
+}
+
 @media (max-width: 480px) {
   .profile_sidebar { width: 100%; right: -100%; }
-  .header_nav { padding: 16px 20px; }
+  .incidents h2, .completed h2 { font-size: 18px; }
 }
 /* ========== TOAST NOTIFICATIONS ========== */
 .toast_container { position: fixed; bottom: 30px; right: 30px; z-index: 9999; display: flex; flex-direction: column; gap: 12px; }
