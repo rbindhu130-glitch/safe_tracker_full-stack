@@ -1,7 +1,5 @@
-// Helper to get API Base URL
-const hostname = window.location.hostname;
-const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-const apiBase = isLocal ? `http://${hostname}:8500` : "";
+const apiBase = window.location.origin;
+console.log("DEBUG: API Base set to", apiBase);
 
 // --- STRICT ROLE CHECK ---
 const user = JSON.parse(localStorage.getItem("user"));
@@ -145,17 +143,9 @@ function updatePositionData(position) {
 }
 
 function handleGPSError(error) {
-    console.error("GPS Error:", error);
+    console.warn("GPS Error handled silently:", error);
     getMapBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Map';
     getMapBtn.style.background = "var(--primary, #3b82f6)";
-
-    let msg = "GPS Error: ";
-    if (error.code === 1) msg += "Please allow location permissions in your browser.";
-    else if (error.code === 2) msg += "Position unavailable.";
-    else if (error.code === 3) msg += "Timeout. Try again.";
-
-    alert(msg);
-    watchId = null;
 }
 
 getMapBtn.addEventListener("click", handleGeolocation);
@@ -171,17 +161,19 @@ async function loadRequests() {
         if (!response.ok) return;
 
         const data = await response.json();
+        console.log(`DEBUG: Received ${data.length} incidents for user ${user.id}`);
         const list = document.getElementById("requestList");
         list.innerHTML = "";
-
+        
         if (!Array.isArray(data) || data.length === 0) {
+            console.log("DEBUG: Data is empty or not an array");
             list.innerHTML = "<p style='text-align:center; padding:20px;'>No requests yet. Submit one using the form!</p>";
             return;
         }
-
+        
         let activeIds = [];
-
         data.reverse().forEach((req) => {
+            console.log(`DEBUG: Processing Incident ${req.id}, Status: ${req.status}`);
             const visibleStatuses = ['reported', 'pending', 'awaiting_confirmation', 'closed', 'in_progress', 'accepted'];
             if (!visibleStatuses.includes(req.status)) return;
 

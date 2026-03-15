@@ -1,7 +1,5 @@
-// Helper to get API Base URL
-const hostname = window.location.hostname;
-const isLocal = hostname === "127.0.0.1" || hostname === "localhost" || hostname.startsWith("192.168.") || hostname.startsWith("10.") || hostname.startsWith("172.");
-const apiBase = isLocal ? `http://${hostname}:8500` : "";
+const apiBase = window.location.origin;
+console.log("DEBUG: API Base set to", apiBase);
 
 const user = JSON.parse(localStorage.getItem("user"));
 
@@ -98,20 +96,13 @@ async function loadIncidents() {
     liveList.innerHTML = '';
     historyList.innerHTML = '';
 
-    if (!Array.isArray(data)) return;
-
+    console.log(`DEBUG: Received ${data.length} incidents from API`);
     data.forEach(incident => {
-      // Location filter: check if any keyword in volunteer's address matches incident address
-      const volAddrWords = (user.address || "").toLowerCase().trim().split(/[\s,]+/).filter(w => w.length > 2);
-      const incidentAddr = (incident.full_address || "").toLowerCase().trim();
+      console.log(`DEBUG: Checking Incident ${incident.id}, Status: ${incident.status}, VolID: ${incident.volunteer_id}`);
       
-      const isLocationMatch = volAddrWords.length === 0 || volAddrWords.some(word => incidentAddr.includes(word));
-      
-      console.log(`Checking Incident ${incident.id}: "${incidentAddr}" against Volunteer Keywords: [${volAddrWords}] -> Match: ${isLocationMatch}`);
-
+      // Temporary: Show ALL reported incidents regardless of location match for debugging
       if ((incident.status === "reported" || incident.status === "pending") && !incident.volunteer_id) {
-        // Log for debugging
-        console.log(`Incident ${incident.id} found. Location Match: ${isLocationMatch}`);
+        console.log(`DEBUG: Incident ${incident.id} MATCHES filter. Appending to liveList.`);
         
         const nearbyBadge = isLocationMatch && volAddrWords.length > 0 ? '<span class="nearby_badge">Nearby</span> ' : '';
 

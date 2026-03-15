@@ -212,11 +212,12 @@ def login(
 
 @router.post("/incidents", response_model=schemas.IncidentCreateResponse)
 def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_db)):
+    print(f"DEBUG: Creating incident for reporter {incident.reporter_id}")
     new_incident = Incident(**incident.model_dump())
     db.add(new_incident)
     db.commit()
     db.refresh(new_incident)
-
+    print(f"DEBUG: Incident created with ID {new_incident.id} and status {new_incident.status}")
     return new_incident
 
 
@@ -289,6 +290,7 @@ def update_incident(
 def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
         incidents = db.query(Incident).all()
+        print(f"DEBUG: Found {len(incidents)} total incidents in DB")
         response = []
         for inc in incidents:
             try:
