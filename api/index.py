@@ -11,7 +11,7 @@ root_path = Path(__file__).resolve().parent
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -54,8 +54,30 @@ manager = ConnectionManager()
 app = FastAPI(title="SafeTracker API")
 
 @app.get("/api/health")
-async def health_check():
-    return {"status": "ok", "version": "sha256-fix"}
+async def health_check(db: Session = Depends(database.get_db)):
+    db_status = "Unknown"
+    missing_vars = []
+    
+    if not os.getenv("DATABASE_URL"):
+        missing_vars.append("DATABASE_URL")
+    if not os.getenv("SUPABASE_URL"):
+        missing_vars.append("SUPABASE_URL")
+    if not os.getenv("SUPABASE_KEY"):
+        missing_vars.append("SUPABASE_KEY")
+        
+    try:
+        db.execute("SELECT 1")
+        db_status = "Connected"
+    except Exception as e:
+        db_status = f"Error: {str(e)}"
+        
+    return {
+        "status": "online",
+        "version": "v2.0.debug",
+        "database": db_status,
+        "missing_env_vars": missing_vars,
+        "is_vercel": os.environ.get("VERCEL") == "1"
+    }
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
