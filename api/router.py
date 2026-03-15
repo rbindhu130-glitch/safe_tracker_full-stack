@@ -11,11 +11,7 @@ from passlib.context import CryptContext
 import hashlib
 
 
-pwd_context = CryptContext(
-    schemes=["bcrypt"], 
-    deprecated="auto",
-    bcrypt__truncate_error=False  # Explicitly allow truncation to prevent errors
-)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str):
     # Pre-hash with SHA256 to allow passwords of any length and bypass bcrypt's 72-byte limit

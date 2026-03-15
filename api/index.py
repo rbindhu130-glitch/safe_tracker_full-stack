@@ -53,6 +53,10 @@ manager = ConnectionManager()
 
 app = FastAPI(title="SafeTracker API")
 
+@app.get("/api/health")
+async def health_check():
+    return {"status": "ok", "version": "sha256-fix"}
+
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     error_details = traceback.format_exc()
