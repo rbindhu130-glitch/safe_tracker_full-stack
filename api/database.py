@@ -11,15 +11,9 @@ load_dotenv()
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 if not SQLALCHEMY_DATABASE_URL:
-    raise RuntimeError("DATABASE_URL not found in environment variables. Please check your .env file.")
-
-# Mask password for security logs
-try:
-    if "@" in SQLALCHEMY_DATABASE_URL:
-        masked_url = SQLALCHEMY_DATABASE_URL.split("@")[0].rsplit(":", 1)[0] + ":****@" + SQLALCHEMY_DATABASE_URL.split("@")[1]
-        print(f"DEBUG: Connecting to Database: {masked_url}")
-except Exception:
-    print("DEBUG: Database connection configured.")
+    print("WARNING: DATABASE_URL not found. System will fail on DB access.")
+    # Use a dummy URL to allow the app to start and report errors via middleware
+    SQLALCHEMY_DATABASE_URL = "postgresql://user:pass@localhost/dummy"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
