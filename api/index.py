@@ -88,11 +88,8 @@ async def health_check(db: Session = Depends(database.get_db)):
 
     return {
         "status": "online",
-        "version": "v2.2.bucket-hunt",
         "database": db_status,
         "storage": storage_status,
-        "available_buckets": available_buckets,
-        "missing_env_vars": missing_vars,
         "is_vercel": os.environ.get("VERCEL") == "1"
     }
 
@@ -119,7 +116,7 @@ async def log_requests(request: Request, call_next):
         return JSONResponse(
             status_code=500,
             content={
-                "detail": f"Critical Middleware Error [v4]: {str(e)}",
+                "detail": f"Internal Server Error: {str(e)}",
                 "traceback": error_details
             }
         )
