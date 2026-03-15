@@ -10,23 +10,13 @@ import schemas
 from passlib.context import CryptContext
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 def hash_password(password: str):
-    try:
-        # Strict 71-char truncation to avoid the 72-byte bcrypt limit entirely
-        safe_pwd = password[:71]
-        return pwd_context.hash(safe_pwd)
-    except Exception:
-        # Emergency fallback for extreme cases
-        return pwd_context.hash(password[:40])
+    return pwd_context.hash(password)
 
 def verify_password(plain_password: str, hashed_password: str):
-    try:
-        safe_pwd = plain_password[:71]
-        return pwd_context.verify(safe_pwd, hashed_password)
-    except Exception:
-        return pwd_context.verify(plain_password[:40], hashed_password)
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 router = APIRouter(prefix="/users", tags=["Users"])

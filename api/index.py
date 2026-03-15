@@ -119,7 +119,7 @@ async def log_requests(request: Request, call_next):
         return JSONResponse(
             status_code=500,
             content={
-                "detail": f"Critical Middleware Error [v3]: {str(e)}",
+                "detail": f"Critical Middleware Error [v4]: {str(e)}",
                 "traceback": error_details
             }
         )
