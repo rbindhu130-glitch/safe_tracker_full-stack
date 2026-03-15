@@ -8,6 +8,7 @@ from models import User, Incident, Complaint, ChatMessage
 from schemas import IncidentUpdate
 import schemas
 from passlib.context import CryptContext
+import hashlib
 
 
 pwd_context = CryptContext(
@@ -17,16 +18,14 @@ pwd_context = CryptContext(
 )
 
 def hash_password(password: str):
-    # Bcrypt has a 72-byte limit. We truncate to 72 bytes safely.
-    pwd_bytes = password.encode('utf-8')[:72]
-    truncated_pwd = pwd_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.hash(truncated_pwd)
+    # Pre-hash with SHA256 to allow passwords of any length and bypass bcrypt's 72-byte limit
+    pre_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return pwd_context.hash(pre_hash)
 
 def verify_password(plain_password: str, hashed_password: str):
-    # Truncate to 72 bytes to match the hashing logic
-    pwd_bytes = plain_password.encode('utf-8')[:72]
-    truncated_pwd = pwd_bytes.decode('utf-8', errors='ignore')
-    return pwd_context.verify(truncated_pwd, hashed_password)
+    # Pre-hash to match the hashing logic
+    pre_hash = hashlib.sha256(plain_password.encode('utf-8')).hexdigest()
+    return pwd_context.verify(pre_hash, hashed_password)
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
