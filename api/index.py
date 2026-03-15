@@ -166,6 +166,11 @@ if not is_vercel:
     if uploads_path.exists():
         app.mount("/api/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
+    # Serve the frontend directory
+    frontend_path = root_path.parent / "frontend"
+    if frontend_path.exists():
+        app.mount("/frontend", StaticFiles(directory=str(frontend_path)), name="frontend")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

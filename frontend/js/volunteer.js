@@ -1,7 +1,8 @@
 // Smart API Base Detection
 function getApiBase() {
-    const { hostname, origin, port } = window.location;
-    if (hostname.includes('vercel.app') || port === '8500') {
+    const { hostname, origin } = window.location;
+    // If we're on Vercel, use origin. If local, ALWAYS use port 8500 for API
+    if (hostname.includes('vercel.app')) {
         return origin;
     }
     return `http://${hostname || 'localhost'}:8500`;
