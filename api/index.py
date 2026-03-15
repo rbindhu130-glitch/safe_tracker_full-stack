@@ -1,25 +1,25 @@
 import os
 import sys
-from pathlib import Path
-from typing import Dict, List
 import json
 import traceback
+from pathlib import Path
+from typing import Dict, List
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Depends
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-# Path setup
+# Add the root path to sys.path to find models, database, etc.
 is_vercel = os.environ.get("VERCEL") == "1"
 root_path = Path(__file__).resolve().parent
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
-from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect, Depends
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from sqlalchemy.orm import Session
-from sqlalchemy import text
-
-import models, database, router
+import models
+import database
+import router
 
 # Create database tables
 try:
@@ -73,18 +73,12 @@ async def health_check(db: Session = Depends(database.get_db)):
         db_status = f"Error: {str(e)}"
         
     storage_status = "Skipped"
-    available_buckets = []
     if database.supabase_client:
         try:
             database.supabase_client.storage.get_bucket("safetracker")
             storage_status = "Connected"
         except Exception as e:
             storage_status = f"Error: {str(e)}"
-            try:
-                buckets = database.supabase_client.storage.list_buckets()
-                available_buckets = [b.name for b in buckets]
-            except:
-                pass
 
     return {
         "status": "online",
@@ -171,6 +165,12 @@ if not is_vercel:
     
     if uploads_path.exists():
         app.mount("/api/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+
+    # Serve the frontend directory
+    frontend_path = root_path.parent / "frontend"
+    if frontend_path.exists():
+        app.mount("/frontend", StaticFiles(directory=str(frontend_path)), name="frontend")
+        print(f"DEBUG: Mounted frontend from {frontend_path}")
 
 app.add_middleware(
     CORSMiddleware,

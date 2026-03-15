@@ -1,4 +1,12 @@
-const apiBase = window.location.origin;
+// Smart API Base Detection
+function getApiBase() {
+    const { hostname, origin, port } = window.location;
+    if (hostname.includes('vercel.app') || port === '8500') {
+        return origin;
+    }
+    return `http://${hostname || 'localhost'}:8500`;
+}
+const apiBase = getApiBase();
 console.log("DEBUG: API Base set to", apiBase);
 
 const user = JSON.parse(localStorage.getItem("user"));

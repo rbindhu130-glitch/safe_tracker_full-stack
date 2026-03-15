@@ -1,4 +1,14 @@
-const apiBase = window.location.origin;
+// Smart API Base Detection
+function getApiBase() {
+    const { hostname, origin, port } = window.location;
+    // If we're on Vercel or serving through the backend port, use origin
+    if (hostname.includes('vercel.app') || port === '8500') {
+        return origin;
+    }
+    // If we're on Live Server (5500/5501) or local file, fallback to default backend port
+    return `http://${hostname || 'localhost'}:8500`;
+}
+const apiBase = getApiBase();
 console.log("DEBUG: API Base set to", apiBase);
 
 // --- STRICT ROLE CHECK ---
