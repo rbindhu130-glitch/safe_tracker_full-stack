@@ -13,10 +13,12 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def hash_password(password: str):
-    return pwd_context.hash(password)
+    # Truncate to 72 characters as it's the bcrypt limit to prevent errors
+    return pwd_context.hash(password[:72])
 
 def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password, hashed_password)
+    # Truncate to 72 characters to match the hashing logic
+    return pwd_context.verify(plain_password[:72], hashed_password)
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
