@@ -25,6 +25,7 @@ html {
   overflow-x: hidden;
   margin: 0;
   padding: 0;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -39,6 +40,7 @@ body {
   color: var(--text_main);
   min-height: 100vh;
   position: relative;
+  overflow-x: hidden !important;
 }
 
 body::before,
@@ -397,6 +399,50 @@ body::after {
   }
   .hero_logo i {
     font-size: clamp(40px, 12vw, 56px);
+  }
+}
+
+/* MICRO MOBILE FIX (320px - 400px) */
+@media (max-width: 400px) {
+  .header_nav {
+    padding: 12px 10px;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .logo_nav {
+    width: 100%;
+    justify-content: center;
+    border-bottom: 1px solid var(--card_border);
+    padding-bottom: 8px;
+  }
+  
+  .logo_nav h2 {
+    font-size: 18px;
+  }
+  
+  .nav_links {
+    gap: 15px;
+    justify-content: center;
+    width: 100%;
+    overflow-x: auto;
+    padding: 5px 0;
+  }
+  
+  .nav_link {
+    font-size: 12px;
+    padding: 2px 0;
+  }
+  
+  .card_role {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 20px 15px;
+  }
+  
+  .containar {
+    padding: 20px 10px;
   }
 }
 
