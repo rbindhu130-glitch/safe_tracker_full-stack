@@ -5,8 +5,9 @@ from typing import Dict, List
 import json
 import traceback
 
-# Absolute Root Path fix
-root_path = Path(__file__).resolve().parent.parent
+# Path setup
+is_vercel = os.environ.get("VERCEL") == "1"
+root_path = Path(__file__).resolve().parent
 if str(root_path) not in sys.path:
     sys.path.append(str(root_path))
 
@@ -119,15 +120,17 @@ async def websocket_endpoint(websocket: WebSocket, incident_id: int, user_id: in
     finally:
         db.close()
 
-uploads_path = root_path / "uploads"
-if not uploads_path.exists():
-    try:
-        os.makedirs(uploads_path)
-    except Exception as e:
-        print(f"Could not create uploads directory: {e}")
-
-if uploads_path.exists():
-    app.mount("/api/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
+# Static files setup (Skip on Vercel as it is read-only)
+if not is_vercel:
+    uploads_path = root_path / "uploads"
+    if not uploads_path.exists():
+        try:
+            os.makedirs(uploads_path)
+        except Exception as e:
+            print(f"Could not create uploads directory: {e}")
+    
+    if uploads_path.exists():
+        app.mount("/api/uploads", StaticFiles(directory=str(uploads_path)), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
