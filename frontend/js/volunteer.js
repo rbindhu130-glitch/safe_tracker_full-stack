@@ -72,9 +72,20 @@ async function loadIncidents() {
       return;
     }
     const data = await response.json();
+    
+    // Check if data is identical to previous load to prevent jumpy UI
+    const dataHash = JSON.stringify(data);
+    if (window.lastIncidentsHash === dataHash) {
+        return; 
+    }
+    window.lastIncidentsHash = dataHash;
 
     const liveList = document.getElementById("live_list");
     const historyList = document.getElementById("history_list");
+
+    // Save scroll positions
+    const liveScroll = liveList ? liveList.scrollTop : 0;
+    const historyScroll = historyList ? historyList.scrollTop : 0;
 
     // Pre-cleanup maps
     for (let id in mapInstances) {
@@ -217,6 +228,10 @@ async function loadIncidents() {
 
     if (liveList.children.length === 0) liveList.innerHTML += "<p style='text-align:center; padding:20px;'>No live requests.</p>";
     if (historyList.children.length === 0) historyList.innerHTML += "<p style='text-align:center; padding:20px;'>No history found.</p>";
+
+    // Restore scroll positions
+    if (liveList) liveList.scrollTop = liveScroll;
+    if (historyList) historyList.scrollTop = historyScroll;
 
   } catch (error) {
     console.error("Error loading incidents:", error);

@@ -7,6 +7,16 @@ from .database import get_db, supabase_client
 from .models import User, Incident, Complaint, ChatMessage
 from .schemas import IncidentUpdate
 from . import schemas
+from passlib.context import CryptContext
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def hash_password(password: str):
+    return pwd_context.hash(password)
+
+def verify_password(plain_password: str, hashed_password: str):
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
@@ -111,7 +121,7 @@ def signup(
         mobile=Mobile,
         email=email,
         role=role,
-        password=password,
+        password=hash_password(password),
         profile_image=image_path,
         address=address,
         is_approved=(role != "volunteer"),  # Volunteers need admin approval
@@ -175,10 +185,10 @@ def login(
 
     user = (
         db.query(User)
-        .filter(User.username == username, User.password == password)
+        .filter(User.username == username)
         .first()
     )
-    if not user:
+    if not user or not verify_password(password, user.password):
         raise HTTPException(status_code=400, detail="User or volunteer not found. Please sign up first.")
 
     # Prevent accidental admin role from database if not using superadmin credentials

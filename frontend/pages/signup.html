@@ -20,7 +20,7 @@
       <label for="username">Username:</label>
       <input type="text" id="username" name="username" required /><br /><br />
       <label for="Mobile">Mobile:</label>
-      <input type="tel" id="Mobile" name="Mobile" required /><br /><br />
+      <input type="tel" id="Mobile" name="Mobile" pattern="\d{10}" minlength="10" maxlength="10" title="Please enter a 10-digit mobile number" required /><br /><br />
       <label for="email">Email:</label>
       <input type="email" id="email" name="email" required /><br /><br />
       <label for="role">Role:</label>
@@ -32,12 +32,12 @@
       <br /><br />
 
       <div id="imageSection">
-        <label for="image">Upload ID Proof (Aadhar/Voter ID):</label>
+        <label for="image">Upload Aadhar Card (PDF only):</label>
         <label for="image" class="custom-file-upload">
-          <i class="fas fa-folder-open"></i>
-          <span id="file-name">Select Aadhar/Voter ID</span>
+          <i class="fas fa-file-pdf"></i>
+          <span id="file-name">Select Aadhar Card (PDF)</span>
         </label>
-        <input type="file" id="image" name="image" accept="image/*" class="hidden_input" />
+        <input type="file" id="image" name="image" accept=".pdf" class="hidden_input" />
         <br />
         <label for="address">Address:</label>
         <input type="text" id="address" name="address" placeholder="Enter your work location/area" />

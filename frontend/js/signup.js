@@ -29,10 +29,18 @@ role.dispatchEvent(new Event("change"));
 if (imageInput) {
     imageInput.addEventListener("change", () => {
         if (imageInput.files && imageInput.files[0]) {
-            fileNameDisplay.textContent = imageInput.files[0].name;
+            const file = imageInput.files[0];
+            if (file.type !== "application/pdf") {
+                alert("Only PDF files are allowed for Aadhar Card!");
+                imageInput.value = "";
+                fileNameDisplay.textContent = "Select Aadhar Card (PDF)";
+                fileNameDisplay.style.color = "#6b7280";
+                return;
+            }
+            fileNameDisplay.textContent = file.name;
             fileNameDisplay.style.color = "var(--primary_blue)";
         } else {
-            fileNameDisplay.textContent = "Choose File";
+            fileNameDisplay.textContent = "Select Aadhar Card (PDF)";
             fileNameDisplay.style.color = "#6b7280";
         }
     });
@@ -47,20 +55,24 @@ signupForm.addEventListener("submit", async (e) => {
     const originalText = signupBtn.innerText;
 
     const formData = new FormData(signupForm);
+    const mobileValue = document.getElementById("Mobile").value.trim();
+    if (!/^\d{10}$/.test(mobileValue)) {
+        alert("Please enter a valid 10-digit mobile number!");
+        return;
+    }
+
     const roleValue = document.getElementById("role").value;
     const imageInput = document.getElementById("image");
     const hasImage = imageInput.files && imageInput.files.length > 0;
 
     if (roleValue === "volunteer") {
         const addressValue = document.getElementById("address").value.trim();
-        if (!hasImage && !addressValue) {
-            alert("Volunteer must upload image and enter address!");
-            return;
-        } else if (!hasImage) {
-            alert("Volunteer must upload image!");
-            return;
-        } else if (!addressValue) {
+        if (!addressValue) {
             alert("Please enter your address!");
+            return;
+        }
+        if (hasImage && imageInput.files[0].type !== "application/pdf") {
+            alert("Please upload Aadhar Card in PDF format!");
             return;
         }
     }

@@ -1,8 +1,0 @@
-fastapi
-uvicorn
-sqlalchemy
-python-dotenv
-python-multipart
-psycopg2-binary
-pydantic
-supabase
