@@ -1,14 +1,15 @@
-// Smart API Base Detection
+// Universal API Base Detection (Works for Computer, Phone, and Vercel)
 function getApiBase() {
-    const { hostname, origin, port } = window.location;
-    // If we're on Vercel, use origin. If local, ALWAYS use port 8500 for API
-    if (hostname.includes('vercel.app')) {
-        return origin;
-    }
-    return `http://${hostname || 'localhost'}:8500`;
+    const { hostname, origin, protocol, port } = window.location;
+    // If on Vercel, use current origin
+    if (hostname.includes('vercel.app')) return origin;
+    // If already on backend port, use current origin
+    if (port === '8500') return origin;
+    // Otherwise, assume backend is on same IP/hostname but port 8500
+    return `${protocol}//${hostname}:8500`;
 }
 const apiBase = getApiBase();
-console.log("DEBUG: API Base set to", apiBase);
+console.log("DEBUG: Target API Base:", apiBase);
 
 // --- STRICT ROLE CHECK ---
 const user = JSON.parse(localStorage.getItem("user"));
