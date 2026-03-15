@@ -1,14 +1,14 @@
 {
   "version": 2,
   "functions": {
-    "backend/api/index.py": {
+    "api/index.py": {
       "runtime": "@vercel/python"
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "backend/api/index.py"
+      "destination": "/api/index.py"
     },
     {
       "source": "/",
@@ -20,6 +20,6 @@
     }
   ],
   "env": {
-    "PYTHONPATH": "backend/api"
+    "PYTHONPATH": "api"
   }
 }
