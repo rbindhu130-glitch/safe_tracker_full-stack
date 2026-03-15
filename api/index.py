@@ -72,10 +72,19 @@ async def health_check(db: Session = Depends(database.get_db)):
     except Exception as e:
         db_status = f"Error: {str(e)}"
         
+    storage_status = "Skipped"
+    if database.supabase_client:
+        try:
+            database.supabase_client.storage.get_bucket("safetracker")
+            storage_status = "Connected"
+        except Exception as e:
+            storage_status = f"Error: {str(e)}"
+
     return {
         "status": "online",
-        "version": "v2.0.debug",
+        "version": "v2.1.final-check",
         "database": db_status,
+        "storage": storage_status,
         "missing_env_vars": missing_vars,
         "is_vercel": os.environ.get("VERCEL") == "1"
     }
