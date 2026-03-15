@@ -10,7 +10,11 @@ import schemas
 from passlib.context import CryptContext
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["bcrypt"], 
+    deprecated="auto",
+    bcrypt__truncate_error=False  # Explicitly allow truncation to prevent errors
+)
 
 def hash_password(password: str):
     # Bcrypt has a 72-byte limit. We truncate to 72 bytes safely.
