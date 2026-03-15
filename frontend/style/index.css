@@ -53,20 +53,23 @@ body::after {
 }
 
 body::before {
-  width: 400px;
-  height: 400px;
+  width: 400px; height: 400px;
   background: rgba(59, 130, 246, 0.15);
-  top: -100px;
-  left: -100px;
+  top: -100px; left: -100px;
 }
 
 body::after {
-  width: 300px;
-  height: 300px;
-  background: rgba(96, 165, 250, 0.1);
+  width: 280px;
+  height: 280px;
+  background: rgba(99, 102, 241, 0.07);
   bottom: 0;
   right: -50px;
-  animation-delay: -5s;
+  animation-delay: -6s;
+}
+
+/* Mobile optimization: Hide orbs that might cause scroll issues on small screens */
+@media (max-width: 768px) {
+  body::before, body::after { display: none; }
 }
 
 @keyframes float {
@@ -399,24 +402,18 @@ body::after {
 
 /* SIDEBAR PROFILE */
 .profile_sidebar {
-  position: fixed;
-  top: 0;
-  right: -420px;
-  width: 400px;
-  max-width: 100%;
-  height: 100vh;
+  position: fixed; top: 0; right: 0; width: 400px; max-width: 100%; height: 100vh;
   background: white;
-  border-left: 1px solid var(--card_border);
-  box-shadow: -4px 0 15px rgba(0, 0, 0, 0.05);
+  border-left: 1px solid var(--border);
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.08);
   z-index: 2000;
-  transition: right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  overflow-y: auto; display: flex; flex-direction: column;
 }
 
 .profile_sidebar.active {
-  right: 0;
+  transform: translateX(0);
 }
 
 .sidebar_close {
