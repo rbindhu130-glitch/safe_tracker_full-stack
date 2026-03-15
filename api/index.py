@@ -17,6 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 
 import models, database, router
 
@@ -66,7 +67,7 @@ async def health_check(db: Session = Depends(database.get_db)):
         missing_vars.append("SUPABASE_KEY")
         
     try:
-        db.execute("SELECT 1")
+        db.execute(text("SELECT 1"))
         db_status = "Connected"
     except Exception as e:
         db_status = f"Error: {str(e)}"
