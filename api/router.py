@@ -3,10 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import shutil
 import os
-from .database import get_db, supabase_client
-from .models import User, Incident, Complaint, ChatMessage
-from .schemas import IncidentUpdate
-from . import schemas
+from database import get_db, supabase_client
+from models import User, Incident, Complaint, ChatMessage
+from schemas import IncidentUpdate
+import schemas
 from passlib.context import CryptContext
 
 
