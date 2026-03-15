@@ -2,10 +2,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 from supabase import create_client
 
-load_dotenv()
+# Load .env from backend/ folder — works regardless of where server is started from
+env_path = Path(__file__).resolve().parent.parent / "backend" / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # PostgreSQL Connection URL from .env (pgAdmin)
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")

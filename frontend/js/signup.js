@@ -71,7 +71,11 @@ signupForm.addEventListener("submit", async (e) => {
             alert("Please enter your address!");
             return;
         }
-        if (hasImage && imageInput.files[0].type !== "application/pdf") {
+        if (!hasImage) {
+            alert("Please upload your Aadhar Card (PDF) to sign up as a volunteer!");
+            return;
+        }
+        if (imageInput.files[0].type !== "application/pdf") {
             alert("Please upload Aadhar Card in PDF format!");
             return;
         }
@@ -85,8 +89,6 @@ signupForm.addEventListener("submit", async (e) => {
     if (roleValue !== "volunteer") {
         formData.delete("image");
         formData.delete("address");
-    } else if (!hasImage) {
-        formData.delete("image");
     }
 
     isSigningUp = true;

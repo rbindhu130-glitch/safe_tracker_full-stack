@@ -20,27 +20,28 @@
 }
 
 html {
+  height: 100%;
   width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
   margin: 0;
   padding: 0;
   scroll-behavior: smooth;
 }
 
 body {
-  width: 100%;
-  max-width: 100%;
   margin: 0;
   padding: 0;
+  height: auto;
+  min-height: 100%;
+  width: 100%;
+  overflow: visible !important;
   background-color: var(--bg_color);
   background-image:
     radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%),
     radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
   color: var(--text_main);
-  min-height: 100vh;
   position: relative;
-  overflow-x: hidden !important;
 }
 
 body::before,
@@ -426,8 +427,9 @@ body::after {
     gap: 15px;
     justify-content: center;
     width: 100%;
-    overflow-x: auto;
+    overflow-x: hidden;
     padding: 5px 0;
+    flex-wrap: wrap;
   }
   
   .nav_link {
