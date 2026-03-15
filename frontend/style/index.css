@@ -83,7 +83,7 @@ body::after {
 .header_nav {
   background: var(--card_bg);
   border-bottom: 1px solid var(--card_border);
-  padding: 20px 50px;
+  padding: 16px 5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -390,7 +390,10 @@ body::after {
 
 @media (max-width: 480px) {
   .hero_logo h1 {
-    font-size: 28px;
+    font-size: clamp(28px, 8vw, 36px);
+  }
+  .hero_logo i {
+    font-size: clamp(40px, 12vw, 56px);
   }
 }
 
