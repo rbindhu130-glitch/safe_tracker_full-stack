@@ -209,6 +209,12 @@ async function loadRequests() {
         // Pure chronological sort: Newest incidents (just sent) always at top
         data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
+        const incidentLabels = {
+            'security': 'Security Escort',
+            'safe': 'Safe Passage',
+            'emergency': 'Emergency Help'
+        };
+
         let activeIds = [];
         data.forEach((req) => {
             console.log(`DEBUG: Processing Incident ${req.id}, Status: ${req.status}`);
@@ -227,7 +233,7 @@ async function loadRequests() {
             div.innerHTML = `
               <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div class="request_info">
-                  <h4>${req.title}</h4>
+                  <h4>${incidentLabels[req.title] || req.title.toUpperCase()}</h4>
                   <p><i class="fas fa-map-marker-alt" style="font-size:11px"></i> ${req.full_address || 'No address'}</p>
                   <p style="font-size:12px; margin-top:4px; color:var(--primary)">
                     <i class="fas fa-user-shield" style="font-size:11px"></i> Volunteer: <strong>${req.volunteer_name || 'Waiting...'}</strong>
@@ -239,7 +245,7 @@ async function loadRequests() {
                 <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 100px;">
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(req.status)) ?
-                    `<button class="chat_btn" onclick="openChat(${req.id}, '${req.title}', '${req.status}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px; position: relative;">
+                    `<button class="chat_btn" onclick="openChat(${req.id}, '${incidentLabels[req.title] || req.title}', '${req.status}')" style="margin-top:5px; padding: 4px 8px; font-size: 11px; position: relative;">
                         <i class="fas fa-comments"></i> ${req.status === 'closed' ? 'History' : 'Chat with Volunteer'}
                         ${req.unread_count > 0 ? `<span class="chat_badge">${req.unread_count}</span>` : ''}
                      </button>` : ''}

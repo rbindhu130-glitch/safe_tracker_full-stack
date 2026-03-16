@@ -121,6 +121,12 @@ async function loadIncidents() {
         return new Date(b.created_at) - new Date(a.created_at);
     });
 
+    const incidentLabels = {
+        'security': 'Security Escort',
+        'safe': 'Safe Passage',
+        'emergency': 'Emergency Help'
+    };
+
     data.forEach(incident => {
       console.log(`DEBUG: Checking Incident ${incident.id}, Status: ${incident.status}, VolID: ${incident.volunteer_id}`);
       
@@ -135,7 +141,7 @@ async function loadIncidents() {
         div.innerHTML = `
               <div class="request_row">
                 <div class="request_info">
-                  <p class="request_title">${nearbyBadge}${incident.title}</p>
+                  <p class="request_title">${nearbyBadge}${incidentLabels[incident.title] || incident.title.toUpperCase()}</p>
                   <p style="color:var(--primary); font-size:14px; margin-bottom:4px;">Reported by: <strong>${incident.reporter_name || 'Anonymous'}</strong></p>
                   <p class="request_meta">${incident.full_address || 'No location'} <span class="dot"></span> ${new Date(incident.created_at).toLocaleString()}</p>
                 </div>
@@ -166,11 +172,11 @@ async function loadIncidents() {
         div.innerHTML = `
                <div class="request_row">
                  <div class="request_info" style="width: 100%;">
-                   <p class="request_title">${incident.title} (${incident.status.replace('_', ' ')})</p>
+                   <p class="request_title">${incidentLabels[incident.title] || incident.title.toUpperCase()} (${incident.status.replace('_', ' ')})</p>
                    <p style="color:var(--primary_blue); font-size:14px; margin-bottom:4px;">Helping: <strong>${incident.reporter_name || 'User'}</strong></p>
                    ${distHtml}
                     <p class="request_meta">${incident.full_address || 'No location'}</p>
-                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="position: relative;">
+                    <button class="chat_btn" onclick="openChat(${incident.id}, '${incidentLabels[incident.title] || incident.title}', '${incident.status}')" style="position: relative;">
                         <i class="fas fa-comments"></i> Chat with User
                         ${incident.unread_count > 0 ? `<span class="chat_badge">${incident.unread_count}</span>` : ''}
                     </button>
@@ -225,10 +231,10 @@ async function loadIncidents() {
         const statusBg = incident.status === "closed" ? "#16a34a" : "#6366f1";
         div.innerHTML = `
               <div style="flex: 1;">
-                <p><strong>${incident.title}</strong></p>
+                <p><strong>${incidentLabels[incident.title] || incident.title.toUpperCase()}</strong></p>
                 <p style="font-size:13px; color:#64748b;">User: ${incident.reporter_name || 'Anonymous'}</p>
                    ${(['accepted', 'in_progress', 'awaiting_confirmation', 'closed'].includes(incident.status)) ?
-            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incident.title}', '${incident.status}')" style="margin-top:8px; position: relative;">
+            `<button class="chat_btn" onclick="openChat(${incident.id}, '${incidentLabels[incident.title] || incident.title}', '${incident.status}')" style="margin-top:8px; position: relative;">
                         <i class="fas fa-comments"></i> ${incident.status === 'closed' ? 'History' : 'Chat'}
                         ${incident.unread_count > 0 ? `<span class="chat_badge">${incident.unread_count}</span>` : ''}
                      </button>` : ''}
