@@ -212,13 +212,18 @@ def login(
 
 @router.post("/incidents", response_model=schemas.IncidentCreateResponse)
 def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_db)):
-    print(f"DEBUG: Creating incident for reporter {incident.reporter_id}")
-    new_incident = Incident(**incident.model_dump())
-    db.add(new_incident)
-    db.commit()
-    db.refresh(new_incident)
-    print(f"DEBUG: Incident created with ID {new_incident.id} and status {new_incident.status}")
-    return new_incident
+    print(f"DEBUG BACKEND: Creating incident. Payload: {incident.model_dump()}")
+    try:
+        new_incident = Incident(**incident.model_dump())
+        db.add(new_incident)
+        db.commit()
+        db.refresh(new_incident)
+        print(f"DEBUG BACKEND: Created ID {new_incident.id}, Status: {new_incident.status}, Reporter: {new_incident.reporter_id}")
+        return new_incident
+    except Exception as e:
+        print(f"DEBUG BACKEND ERROR: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/incident/me/{incident_id}", response_model=schemas.IncidentStatusResponse)
@@ -330,14 +335,17 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
 
 @router.get("/incidents/user/{user_id}")
 def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
+    print(f"DEBUG BACKEND: GET incidents for user {user_id}")
     try:
         incidents = db.query(Incident).filter(Incident.reporter_id == user_id).all()
+        print(f"DEBUG BACKEND: Found {len(incidents)} incidents in DB for user {user_id}")
         response = []
         for inc in incidents:
             try:
+                # Log incident we found
+                print(f"  - Incident {inc.id}: status={inc.status}, reporter={inc.reporter_id}")
                 unread_count = 0
                 try:
-                    # Count unread messages not sent by the reporter
                     unread_count = (
                         db.query(ChatMessage)
                         .filter(
