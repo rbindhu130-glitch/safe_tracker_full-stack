@@ -107,6 +107,20 @@ async function loadIncidents() {
     historyList.innerHTML = '';
 
     console.log(`DEBUG: Received ${data.length} incidents from API`);
+
+    // Sort: In Progress (mine) > Reported/Pending > Others
+    data.sort((a, b) => {
+        const getPriority = (inc) => {
+            if (inc.status === 'in_progress' && inc.volunteer_id == user.id) return 1;
+            if (inc.status === 'reported' || inc.status === 'pending') return 2;
+            return 3;
+        };
+        const pA = getPriority(a);
+        const pB = getPriority(b);
+        if (pA !== pB) return pA - pB;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+
     data.forEach(incident => {
       console.log(`DEBUG: Checking Incident ${incident.id}, Status: ${incident.status}, VolID: ${incident.volunteer_id}`);
       

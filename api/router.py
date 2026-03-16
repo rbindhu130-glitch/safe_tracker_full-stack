@@ -330,7 +330,7 @@ def update_incident(
 @router.get("/incidents")
 def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     try:
-        incidents = db.query(Incident).all()
+        incidents = db.query(Incident).order_by(Incident.created_at.desc()).all()
         print(f"DEBUG: Found {len(incidents)} total incidents in DB")
         response = []
         for inc in incidents:
@@ -499,7 +499,7 @@ def confirm_incident(incident_id: int, confirmed: bool, db: Session = Depends(ge
 @router.get("/available-incidents", response_model=List[schemas.IncidentResponse])
 def get_available_incidents(db: Session = Depends(get_db)):
     # Return only reported incidents for volunteers
-    incidents = db.query(Incident).filter(Incident.status == "reported").all()
+    incidents = db.query(Incident).filter(Incident.status == "reported").order_by(Incident.created_at.desc()).all()
     response = []
     for inc in incidents:
         inc_data = schemas.IncidentResponse.model_validate(inc)
