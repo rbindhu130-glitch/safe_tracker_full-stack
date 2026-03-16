@@ -162,6 +162,18 @@ getMapBtn.addEventListener("click", handleGeolocation);
 locationInput.addEventListener("click", () => {
     if (!currentLat) handleGeolocation();
 });
+locationInput.addEventListener("input", () => {
+    console.log("DEBUG: Location edited manually, resetting GPS coords");
+    currentLat = null;
+    currentLng = null;
+    // Optional: Stop tracking if they type manually
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+        getMapBtn.innerHTML = '<i class="fas fa-map-marker-alt"></i> Get Map';
+        getMapBtn.style.background = "var(--primary, #3b82f6)";
+    }
+});
 
 async function loadRequests() {
     try {
@@ -303,6 +315,10 @@ incidentForm.addEventListener("submit", async (e) => {
     const title = document.getElementById("select").value;
     const full_address = locationInput.value;
     
+    // Ensure latitude and longitude are numbers or null
+    const lat = (typeof currentLat === 'number') ? currentLat : null;
+    const lng = (typeof currentLng === 'number') ? currentLng : null;
+
     if (!title || !full_address) {
         showToast("Please select incident type and location", "error");
         isSubmitting = false;
@@ -314,9 +330,9 @@ incidentForm.addEventListener("submit", async (e) => {
     const payload = {
         title: title,
         full_address: full_address,
-        latitude: currentLat,
-        longitude: currentLng,
-        reporter_id: user.id
+        latitude: lat,
+        longitude: lng,
+        reporter_id: parseInt(user.id)
     };
 
     console.log("DEBUG: Sending Incident Payload:", payload);

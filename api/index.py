@@ -24,8 +24,16 @@ import router
 # Create database tables
 try:
     models.Base.metadata.create_all(bind=database.engine)
+    # Manual Migration for is_approved column
+    from sqlalchemy import text
+    with database.engine.connect() as conn:
+        res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='is_approved'"))
+        if not res.fetchone():
+            print("Adding is_approved column...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT TRUE"))
+            conn.commit()
 except Exception as e:
-    print(f"Database creation skipped or failed: {e}")
+    print(f"Database creation/migration skipped or failed: {e}")
 
 # Connection Manager for WebSockets
 class ConnectionManager:
@@ -98,24 +106,6 @@ async def global_exception_handler(request: Request, exc: Exception):
             "traceback": error_details,
         },
     )
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    print(f"DEBUG: Request hit: {request.method} {request.url.path}")
-    try:
-        response = await call_next(request)
-        print(f"DEBUG: Response status: {response.status_code}")
-        return response
-    except Exception as e:
-        error_details = traceback.format_exc()
-        print(f"Middleware Error: {error_details}")
-        return JSONResponse(
-            status_code=500,
-            content={
-                "detail": f"Internal Server Error: {str(e)}",
-                "traceback": error_details
-            }
-        )
 
 @app.websocket("/ws/chat/{incident_id}/{user_id}")
 async def websocket_endpoint(websocket: WebSocket, incident_id: int, user_id: int):
