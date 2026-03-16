@@ -206,22 +206,8 @@ async function loadRequests() {
             return;
         }
         
-        // Status Priority: Active > Reported > Closed
-        const statusPriority = {
-            'awaiting_confirmation': 1,
-            'in_progress': 2,
-            'accepted': 2,
-            'reported': 3,
-            'pending': 3,
-            'closed': 4
-        };
-
-        data.sort((a, b) => {
-            const pA = statusPriority[a.status] || 99;
-            const pB = statusPriority[b.status] || 99;
-            if (pA !== pB) return pA - pB;
-            return new Date(b.created_at) - new Date(a.created_at);
-        });
+        // Pure chronological sort: Newest incidents (just sent) always at top
+        data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
         let activeIds = [];
         data.forEach((req) => {
