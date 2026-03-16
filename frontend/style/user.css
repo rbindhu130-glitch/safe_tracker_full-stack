@@ -295,7 +295,7 @@ body::after {
   gap: 12px;
   margin-top: 15px;
   flex-grow: 1;
-  max-height: 440px;
+  max-height: 600px;
   overflow-y: auto;
   padding-right: 5px;
 }
