@@ -212,16 +212,28 @@ def login(
 
 @router.post("/incidents", response_model=schemas.IncidentResponse)
 def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_db)):
-    print(f"DEBUG BACKEND: Creating incident. Payload: {incident.model_dump()}")
+    payload_data = incident.model_dump()
+    print(f"DEBUG BACKEND: POST /incidents triggered. Payload: {payload_data}")
     try:
-        new_incident = Incident(**incident.model_dump())
+        # Explicitly map fields to avoid any Pydantic/SQLAlchemy mismatch
+        new_incident = Incident(
+            title=payload_data.get("title"),
+            full_address=payload_data.get("full_address"),
+            latitude=payload_data.get("latitude"),
+            longitude=payload_data.get("longitude"),
+            reporter_id=payload_data.get("reporter_id"),
+            status="reported"
+        )
         db.add(new_incident)
         db.commit()
         db.refresh(new_incident)
-        print(f"DEBUG BACKEND: Created ID {new_incident.id}, Status: {new_incident.status}")
+        print(f"DEBUG BACKEND: Incident SAVED. ID: {new_incident.id}, Reporter: {new_incident.reporter_id}, Status: {new_incident.status}")
         
-        # Return full response to help frontend debugging
-        res = schemas.IncidentResponse(
+        # Verify immediately if it's visible for this user
+        db_count = db.query(Incident).filter(Incident.reporter_id == new_incident.reporter_id).count()
+        print(f"DEBUG BACKEND: After save, user {new_incident.reporter_id} now has {db_count} incidents in DB")
+
+        return schemas.IncidentResponse(
             id=new_incident.id,
             title=new_incident.title,
             full_address=new_incident.full_address,
@@ -235,9 +247,8 @@ def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_
             volunteer_name="Waiting...",
             unread_count=0
         )
-        return res
     except Exception as e:
-        print(f"DEBUG BACKEND ERROR: {e}")
+        print(f"DEBUG BACKEND ERROR during creation: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -351,15 +362,20 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
 
 @router.get("/incidents/user/{user_id}", response_model=List[schemas.IncidentResponse])
 def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
-    print(f"DEBUG BACKEND: GET incidents for user {user_id}")
+    print(f"DEBUG BACKEND: Fetching incidents for user_id={user_id}")
     try:
-        # Use a simpler query and manual mapping to avoid hidden validation errors
+        # Debug: Check any incident in the DB to see if reporter_id matching logic is sane
+        sample = db.query(Incident).first()
+        if sample:
+            print(f"DEBUG BACKEND DATA: Found sample incident {sample.id} with reporter_id={sample.reporter_id} (type: {type(sample.reporter_id)})")
+        
         incidents = db.query(Incident).filter(Incident.reporter_id == user_id).order_by(Incident.created_at.desc()).all()
-        print(f"DEBUG BACKEND: Found {len(incidents)} incidents in DB for user {user_id}")
+        print(f"DEBUG BACKEND: Query for user {user_id} returned {len(incidents)} results")
         
         response_list = []
         for inc in incidents:
             try:
+                # ... existing unread logic ...
                 unread_count = (
                     db.query(ChatMessage)
                     .filter(

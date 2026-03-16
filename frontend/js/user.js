@@ -190,7 +190,9 @@ async function loadRequests() {
         }
 
         const data = await response.json();
-        console.log(`DEBUG: Received ${data.length} incidents for user ${user.id}`, data);
+        console.log(`DEBUG FETCH: URL /api/users/incidents/user/${user.id} -> Status ${response.status}`);
+        console.log(`DEBUG FETCH: Data received for user ${user.id}:`, JSON.stringify(data));
+        
         const list = document.getElementById("requestList");
         if (!list) {
             console.error("DEBUG: Element #requestList not found!");
@@ -335,7 +337,7 @@ incidentForm.addEventListener("submit", async (e) => {
         reporter_id: parseInt(user.id)
     };
 
-    console.log("DEBUG: Sending Incident Payload:", payload);
+    console.log("DEBUG SUBMIT: Sending Payload ->", JSON.stringify(payload));
 
     try {
         const response = await fetch(`${apiBase}/api/users/incidents`, {
@@ -344,9 +346,9 @@ incidentForm.addEventListener("submit", async (e) => {
             body: JSON.stringify(payload),
         });
 
-        console.log("DEBUG: POST Response Status:", response.status);
+        console.log("DEBUG SUBMIT: Response Status ->", response.status);
         const result = await response.json();
-        console.log("DEBUG: POST Response Data:", result);
+        console.log("DEBUG SUBMIT: Response Data ->", JSON.stringify(result));
 
         if (response.ok) {
             showToast("Request submitted successfully!");
