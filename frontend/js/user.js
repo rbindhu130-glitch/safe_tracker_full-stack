@@ -392,19 +392,9 @@ incidentForm.addEventListener("submit", async (e) => {
 });
 
 async function deleteIncident(id) {
-    if (isSubmitting) {
-        alert("Action in progress, please wait...");
-        return;
-    }
+    if (isSubmitting) return;
     if (!confirm("Are you sure you want to delete this specific request?")) return;
     
-    // Debugging point 1
-    console.log("DEBUG: deleteIncident starting for ID:", id);
-    if (!user || !user.id) {
-        alert("Session error: No user found. Please login again.");
-        return;
-    }
-
     isSubmitting = true;
     try {
         const url = `${apiBase}/api/users/incidents/${id}?user_id=${user.id}`;
@@ -415,23 +405,19 @@ async function deleteIncident(id) {
             headers: { "Accept": "application/json" }
         });
         
-        console.log("DEBUG: Response Status:", response.status);
-        
         const result = await response.json();
         console.log("DEBUG: Response JSON:", result);
 
         if (response.ok) {
-            alert("Request successfully deleted!"); // Immediate feedback
             showToast("Request deleted successfully!");
-            loadRequests();
+            // Refresh list after a small delay
+            setTimeout(loadRequests, 500);
         } else {
             const msg = result.detail || "Server refused deletion";
-            alert("Delete FAILED: " + msg);
             showToast("Error: " + msg, "error");
         }
     } catch (e) { 
-        console.error("DEBUG: Delete error catch:", e); 
-        alert("Network Error: " + e.message);
+        console.error("DEBUG: Delete error:", e); 
         showToast("Network/Connection Error", "error");
     }
     finally { 
