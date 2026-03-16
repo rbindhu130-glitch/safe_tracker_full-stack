@@ -40,6 +40,13 @@ try:
             print("Adding emergency_contact_email column...")
             conn.execute(text("ALTER TABLE users ADD COLUMN emergency_contact_email VARCHAR"))
             conn.commit()
+
+        # Check is_read in chat_messages
+        res3 = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='chat_messages' AND column_name='is_read'"))
+        if not res3.fetchone():
+            print("Adding is_read column to chat_messages...")
+            conn.execute(text("ALTER TABLE chat_messages ADD COLUMN is_read BOOLEAN DEFAULT FALSE"))
+            conn.commit()
 except Exception as e:
     print(f"Database creation/migration skipped or failed: {e}")
 
