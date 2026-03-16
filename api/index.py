@@ -27,10 +27,18 @@ try:
     # Manual Migration for is_approved column
     from sqlalchemy import text
     with database.engine.connect() as conn:
+        # Check is_approved
         res = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='is_approved'"))
         if not res.fetchone():
             print("Adding is_approved column...")
             conn.execute(text("ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT TRUE"))
+            conn.commit()
+        
+        # Check emergency_contact_email
+        res2 = conn.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='emergency_contact_email'"))
+        if not res2.fetchone():
+            print("Adding emergency_contact_email column...")
+            conn.execute(text("ALTER TABLE users ADD COLUMN emergency_contact_email VARCHAR"))
             conn.commit()
 except Exception as e:
     print(f"Database creation/migration skipped or failed: {e}")
