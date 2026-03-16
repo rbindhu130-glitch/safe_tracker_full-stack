@@ -101,8 +101,10 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    print(f"DEBUG: Request hit: {request.method} {request.url.path}")
     try:
         response = await call_next(request)
+        print(f"DEBUG: Response status: {response.status_code}")
         return response
     except Exception as e:
         error_details = traceback.format_exc()

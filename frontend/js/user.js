@@ -165,14 +165,25 @@ locationInput.addEventListener("click", () => {
 
 async function loadRequests() {
     try {
-        if (!user || !user.id) return;
+        if (!user || user.id === null || user.id === undefined) {
+            console.warn("DEBUG: No user or user.id found in localStorage", user);
+            return;
+        }
 
         const response = await fetch(`${apiBase}/api/users/incidents/user/${user.id}`);
-        if (!response.ok) return;
+        if (!response.ok) {
+            const errText = await response.text();
+            console.error(`DEBUG: Fetch failed for user ${user.id}: Status ${response.status}`, errText);
+            return;
+        }
 
         const data = await response.json();
-        console.log(`DEBUG: Received ${data.length} incidents for user ${user.id}`);
+        console.log(`DEBUG: Received ${data.length} incidents for user ${user.id}`, data);
         const list = document.getElementById("requestList");
+        if (!list) {
+            console.error("DEBUG: Element #requestList not found!");
+            return;
+        }
         list.innerHTML = "";
         
         if (!Array.isArray(data) || data.length === 0) {
@@ -200,7 +211,13 @@ async function loadRequests() {
               <div style="display: flex; justify-content: space-between; align-items: flex-start; width: 100%;">
                 <div class="request_info">
                   <h4>${req.title}</h4>
-                  <p>${req.full_address || 'No address'}</p>
+                  <p><i class="fas fa-map-marker-alt" style="font-size:11px"></i> ${req.full_address || 'No address'}</p>
+                  <p style="font-size:12px; margin-top:4px; color:var(--primary)">
+                    <i class="fas fa-user-shield" style="font-size:11px"></i> Volunteer: <strong>${req.volunteer_name || 'Waiting...'}</strong>
+                  </p>
+                  <p style="font-size:11px; color:#94a3b8; margin-top:2px;">
+                    <i class="fas fa-calendar-alt" style="font-size:10px"></i> ${new Date(req.created_at).toLocaleString()}
+                  </p>
                 </div>
                 <div style="text-align:right; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; min-width: 100px;">
                    <span class="status_badge status_${req.status}">${req.status.replace('_', ' ').toUpperCase()}</span>
@@ -269,7 +286,12 @@ async function confirmIncident(id, confirmed) {
 let isSubmitting = false;
 incidentForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
+    console.log("DEBUG: Incident form submit triggered");
+    
+    if (isSubmitting) {
+        console.warn("DEBUG: Already submitting, ignoring");
+        return;
+    }
     
     const submitBtn = incidentForm.querySelector(".submit");
     const originalBtnText = submitBtn.innerHTML;
@@ -280,6 +302,15 @@ incidentForm.addEventListener("submit", async (e) => {
 
     const title = document.getElementById("select").value;
     const full_address = locationInput.value;
+    
+    if (!title || !full_address) {
+        showToast("Please select incident type and location", "error");
+        isSubmitting = false;
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalBtnText;
+        return;
+    }
+
     const payload = {
         title: title,
         full_address: full_address,
@@ -288,12 +319,18 @@ incidentForm.addEventListener("submit", async (e) => {
         reporter_id: user.id
     };
 
+    console.log("DEBUG: Sending Incident Payload:", payload);
+
     try {
         const response = await fetch(`${apiBase}/api/users/incidents`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),
         });
+
+        console.log("DEBUG: POST Response Status:", response.status);
+        const result = await response.json();
+        console.log("DEBUG: POST Response Data:", result);
 
         if (response.ok) {
             showToast("Request submitted successfully!");
@@ -305,6 +342,7 @@ incidentForm.addEventListener("submit", async (e) => {
             
             // Stop GPS tracking if active
             if (watchId !== null) {
+                console.log("DEBUG: Stopping GPS watch");
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
@@ -320,9 +358,9 @@ incidentForm.addEventListener("submit", async (e) => {
             }
             map.setView([13.0827, 80.2707], 11); // Back to Chennai default
 
-            loadRequests();
+            console.log("DEBUG: Refreshing requests list...");
+            setTimeout(loadRequests, 1000); // Delayed refresh just in case
         } else {
-            const result = await response.json();
             showToast("Error: " + (result.detail || "Unknown error"), "error");
         }
     } catch (error) { 

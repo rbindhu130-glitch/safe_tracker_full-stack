@@ -114,7 +114,7 @@ async function loadIncidents() {
       if ((incident.status === "reported" || incident.status === "pending") && !incident.volunteer_id) {
         console.log(`DEBUG: Incident ${incident.id} MATCHES filter. Appending to liveList.`);
         
-        const nearbyBadge = isLocationMatch && volAddrWords.length > 0 ? '<span class="nearby_badge">Nearby</span> ' : '';
+        const nearbyBadge = ""; // Logic for nearby removed to show all requests as requested by user previously
 
         const div = document.createElement("div");
         div.className = "request";
