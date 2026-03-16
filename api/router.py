@@ -265,20 +265,29 @@ def get_incident_status(incident_id: int, db: Session = Depends(get_db)):
 def delete_incident(
     incident_id: int, user_id: int = Query(...), db: Session = Depends(get_db)
 ):
+    print(f"DEBUG BACKEND: DELETE /incidents/{incident_id} called by user {user_id}")
     # Validate user ownership
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not incident:
+        print(f"DEBUG BACKEND: Incident {incident_id} not found")
         raise HTTPException(status_code=404, detail="Incident not found")
 
     # Ensure only the reporter can delete
     if incident.reporter_id != user_id:
+        print(f"DEBUG BACKEND: Unauthorized delete attempt. Incident reporter: {incident.reporter_id}, requester: {user_id}")
         raise HTTPException(
             status_code=403, detail="Not authorized to delete this incident"
         )
 
-    db.delete(incident)
-    db.commit()
-    return {"message": "Incident deleted"}
+    try:
+        db.delete(incident)
+        db.commit()
+        print(f"DEBUG BACKEND: Incident {incident_id} successfully deleted")
+        return {"message": "Incident deleted"}
+    except Exception as e:
+        db.rollback()
+        print(f"DEBUG BACKEND ERROR during deletion: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/incidents/{incident_id}", response_model=schemas.IncidentResponse)

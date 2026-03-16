@@ -241,7 +241,7 @@ async function loadRequests() {
                         ${req.unread_count > 0 ? `<span class="chat_badge">${req.unread_count}</span>` : ''}
                      </button>` : ''}
                    ${(req.status === 'reported' || req.status === 'pending') ?
-                    `<button class="delete_btn_icon" title="Cancel Request" onclick="deleteIncident('${req.id}')" style="background: none; border: none; color: #dc2626; font-size: 24px; cursor: pointer; padding: 0; transition: transform 0.2s; display: flex;">
+                    `<button class="btn_delete_icon" title="Cancel Request" onclick="deleteIncident('${req.id}')" style="background: none; border: none; color: #dc2626; font-size: 24px; cursor: pointer; padding: 0; transition: transform 0.2s; display: flex;">
                         <i class="fas fa-times-circle"></i>
                      </button>`
                     : ''}
@@ -392,18 +392,51 @@ incidentForm.addEventListener("submit", async (e) => {
 });
 
 async function deleteIncident(id) {
-    if (isSubmitting) return;
-    if (!confirm("Are you sure you want to delete this request?")) return;
+    if (isSubmitting) {
+        alert("Action in progress, please wait...");
+        return;
+    }
+    if (!confirm("Are you sure you want to delete this specific request?")) return;
     
+    // Debugging point 1
+    console.log("DEBUG: deleteIncident starting for ID:", id);
+    if (!user || !user.id) {
+        alert("Session error: No user found. Please login again.");
+        return;
+    }
+
     isSubmitting = true;
     try {
-        const response = await fetch(`${apiBase}/api/users/incidents/${id}?user_id=${user.id}`, { method: "DELETE" });
+        const url = `${apiBase}/api/users/incidents/${id}?user_id=${user.id}`;
+        console.log("DEBUG: Deleting via URL:", url);
+        
+        const response = await fetch(url, { 
+            method: "DELETE",
+            headers: { "Accept": "application/json" }
+        });
+        
+        console.log("DEBUG: Response Status:", response.status);
+        
+        const result = await response.json();
+        console.log("DEBUG: Response JSON:", result);
+
         if (response.ok) {
-            showToast("Request deleted");
+            alert("Request successfully deleted!"); // Immediate feedback
+            showToast("Request deleted successfully!");
             loadRequests();
+        } else {
+            const msg = result.detail || "Server refused deletion";
+            alert("Delete FAILED: " + msg);
+            showToast("Error: " + msg, "error");
         }
-    } catch (e) { console.error(e); }
-    finally { isSubmitting = false; }
+    } catch (e) { 
+        console.error("DEBUG: Delete error catch:", e); 
+        alert("Network Error: " + e.message);
+        showToast("Network/Connection Error", "error");
+    }
+    finally { 
+        isSubmitting = false; 
+    }
 }
 
 // Sidebar Logic
