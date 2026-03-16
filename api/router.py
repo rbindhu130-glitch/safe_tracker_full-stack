@@ -210,7 +210,7 @@ def login(
 # --- Incidents ---
 
 
-@router.post("/incidents", response_model=schemas.IncidentCreateResponse)
+@router.post("/incidents", response_model=schemas.IncidentResponse)
 def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_db)):
     print(f"DEBUG BACKEND: Creating incident. Payload: {incident.model_dump()}")
     try:
@@ -218,8 +218,24 @@ def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_
         db.add(new_incident)
         db.commit()
         db.refresh(new_incident)
-        print(f"DEBUG BACKEND: Created ID {new_incident.id}, Status: {new_incident.status}, Reporter: {new_incident.reporter_id}")
-        return new_incident
+        print(f"DEBUG BACKEND: Created ID {new_incident.id}, Status: {new_incident.status}")
+        
+        # Return full response to help frontend debugging
+        res = schemas.IncidentResponse(
+            id=new_incident.id,
+            title=new_incident.title,
+            full_address=new_incident.full_address,
+            latitude=new_incident.latitude,
+            longitude=new_incident.longitude,
+            status=new_incident.status,
+            created_at=new_incident.created_at,
+            reporter_id=new_incident.reporter_id,
+            volunteer_id=new_incident.volunteer_id,
+            reporter_name=new_incident.reporter.username if new_incident.reporter else "Unknown",
+            volunteer_name="Waiting...",
+            unread_count=0
+        )
+        return res
     except Exception as e:
         print(f"DEBUG BACKEND ERROR: {e}")
         db.rollback()
@@ -333,47 +349,49 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/incidents/user/{user_id}")
+@router.get("/incidents/user/{user_id}", response_model=List[schemas.IncidentResponse])
 def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
     print(f"DEBUG BACKEND: GET incidents for user {user_id}")
     try:
-        incidents = db.query(Incident).filter(Incident.reporter_id == user_id).all()
+        # Use a simpler query and manual mapping to avoid hidden validation errors
+        incidents = db.query(Incident).filter(Incident.reporter_id == user_id).order_by(Incident.created_at.desc()).all()
         print(f"DEBUG BACKEND: Found {len(incidents)} incidents in DB for user {user_id}")
-        response = []
+        
+        response_list = []
         for inc in incidents:
             try:
-                # Log incident we found
-                print(f"  - Incident {inc.id}: status={inc.status}, reporter={inc.reporter_id}")
-                unread_count = 0
-                try:
-                    unread_count = (
-                        db.query(ChatMessage)
-                        .filter(
-                            ChatMessage.incident_id == inc.id,
-                            ChatMessage.sender_id != user_id,
-                            (ChatMessage.is_read.is_(False)) | (ChatMessage.is_read.is_(None)),
-                        )
-                        .count()
+                unread_count = (
+                    db.query(ChatMessage)
+                    .filter(
+                        ChatMessage.incident_id == inc.id,
+                        ChatMessage.sender_id != user_id,
+                        (ChatMessage.is_read.is_(False)) | (ChatMessage.is_read.is_(None)),
                     )
-                except Exception as e:
-                    print(f"User unread count error: {e}")
+                    .count()
+                )
                 
-                inc_data = schemas.IncidentResponse.model_validate(inc)
-                inc_data.reporter_name = (
-                    inc.reporter.username if inc.reporter else "Unknown"
+                # Manual mapping to ensure all fields are present for Pydantic
+                inc_data = schemas.IncidentResponse(
+                    id=inc.id,
+                    title=inc.title,
+                    full_address=inc.full_address,
+                    latitude=inc.latitude,
+                    longitude=inc.longitude,
+                    status=inc.status,
+                    created_at=inc.created_at,
+                    reporter_id=inc.reporter_id,
+                    volunteer_id=inc.volunteer_id,
+                    reporter_name=inc.reporter.username if inc.reporter else "Unknown",
+                    volunteer_name=inc.volunteer.username if inc.volunteer else "Waiting...",
+                    unread_count=unread_count
                 )
-                inc_data.volunteer_name = (
-                    inc.volunteer.username if inc.volunteer else "Waiting..."
-                )
-                inc_data.unread_count = unread_count
-                response.append(inc_data)
+                response_list.append(inc_data)
             except Exception as inner_e:
-                print(
-                    f"DEBUG Error processing user incident #{getattr(inc, 'id', '?')}: {inner_e}"
-                )
-        return response
+                print(f"DEBUG BACKEND ERROR processing incident {inc.id}: {inner_e}")
+                
+        return response_list
     except Exception as e:
-        print(f"DEBUG Error in GET /incidents/user/{user_id}: {e}")
+        print(f"DEBUG BACKEND ERROR in GET /incidents/user/{user_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
