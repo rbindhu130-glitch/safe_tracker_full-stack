@@ -362,31 +362,38 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
 
 @router.get("/incidents/user/{user_id}", response_model=List[schemas.IncidentResponse])
 def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
-    print(f"DEBUG BACKEND: Fetching incidents for user_id={user_id}")
+    print(f"DEBUG BACKEND: Fetching incidents for user_id={user_id} (Type: {type(user_id)})")
     try:
-        # Debug: Check any incident in the DB to see if reporter_id matching logic is sane
-        sample = db.query(Incident).first()
-        if sample:
-            print(f"DEBUG BACKEND DATA: Found sample incident {sample.id} with reporter_id={sample.reporter_id} (type: {type(sample.reporter_id)})")
+        # Check if user exists
+        user_obj = db.query(User).filter(User.id == user_id).first()
+        if not user_obj:
+            print(f"DEBUG BACKEND: User {user_id} NOT FOUND in database.")
+            # Fallback: try filtering directly just in case user table is weirdly indexed
+            incidents = db.query(Incident).filter(Incident.reporter_id == user_id).order_by(Incident.created_at.desc()).all()
+        else:
+            print(f"DEBUG BACKEND: User {user_obj.username} found. Fetching their incidents...")
+            incidents = db.query(Incident).filter(Incident.reporter_id == user_id).order_by(Incident.created_at.desc()).all()
         
-        incidents = db.query(Incident).filter(Incident.reporter_id == user_id).order_by(Incident.created_at.desc()).all()
-        print(f"DEBUG BACKEND: Query for user {user_id} returned {len(incidents)} results")
+        print(f"DEBUG BACKEND: Query returned {len(incidents)} incidents for user {user_id}")
         
         response_list = []
         for inc in incidents:
             try:
-                # ... existing unread logic ...
-                unread_count = (
-                    db.query(ChatMessage)
-                    .filter(
-                        ChatMessage.incident_id == inc.id,
-                        ChatMessage.sender_id != user_id,
-                        (ChatMessage.is_read.is_(False)) | (ChatMessage.is_read.is_(None)),
+                unread_count = 0
+                try:
+                    unread_count = (
+                        db.query(ChatMessage)
+                        .filter(
+                            ChatMessage.incident_id == inc.id,
+                            ChatMessage.sender_id != user_id,
+                            (ChatMessage.is_read.is_(False)) | (ChatMessage.is_read.is_(None)),
+                        )
+                        .count()
                     )
-                    .count()
-                )
-                
-                # Manual mapping to ensure all fields are present for Pydantic
+                except Exception as e:
+                    print(f"Unread count error for inc {inc.id}: {e}")
+
+                # Manual mapping to ensure stability
                 inc_data = schemas.IncidentResponse(
                     id=inc.id,
                     title=inc.title,
@@ -403,11 +410,11 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
                 )
                 response_list.append(inc_data)
             except Exception as inner_e:
-                print(f"DEBUG BACKEND ERROR processing incident {inc.id}: {inner_e}")
+                print(f"DEBUG BACKEND ERROR processing incident {getattr(inc, 'id', '?')}: {inner_e}")
                 
         return response_list
     except Exception as e:
-        print(f"DEBUG BACKEND ERROR in GET /incidents/user/{user_id}: {e}")
+        print(f"DEBUG BACKEND CRITICAL ERROR in GET /incidents/user/{user_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
