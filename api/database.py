@@ -30,8 +30,14 @@ if SQLALCHEMY_DATABASE_URL and "pooler.supabase.com" in SQLALCHEMY_DATABASE_URL:
                 # Extract ref from https://ref.supabase.co
                 project_ref = supabase_url.split("//")[-1].split(".")[0]
             except Exception: pass
+    
+    # LAST RESORT: Fallback to the one found in local .env if none provided in Vercel
+    if not project_ref:
+        project_ref = "wnvtmejejyfzneqvgvqq"
+        print(f"DEBUG: Using hardcoded fallback project ref: {project_ref}")
 
     if project_ref:
+        print(f"DEBUG: Attempting to apply Pooler fix with ref: {project_ref}")
         # Check if username already has the ref
         if f"postgres.{project_ref}" not in SQLALCHEMY_DATABASE_URL:
             # We need to replace the username 'postgres' with 'postgres.[ref]'
@@ -42,11 +48,15 @@ if SQLALCHEMY_DATABASE_URL and "pooler.supabase.com" in SQLALCHEMY_DATABASE_URL:
             elif "@" in SQLALCHEMY_DATABASE_URL:
                  # Alternative check if password-less or something weird
                  parts = SQLALCHEMY_DATABASE_URL.split("@")
-                 if parts[0].endswith("postgres"):
-                      SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres@", f"postgres.{project_ref}@")
+                 # parts[0] is 'postgresql://user'
+                 if parts[0].endswith("postgres") or "postgres:" in parts[0]:
+                      if "postgres:" in parts[0]:
+                           SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres:", f"postgres.{project_ref}:")
+                      else:
+                           SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres@", f"postgres.{project_ref}@")
                       print(f"AUTO-FIX (Alt): Added project ref '{project_ref}' to DATABASE_URL.")
     else:
-        print("WARNING: Using Supabase Pooler but SUPABASE_URL or SUPABASE_PROJECT_REF is missing. Connection will likely fail.")
+        print("WARNING: Using Supabase Pooler but PROJECT_REF is missing. Connection will likely fail.")
 # --------------------
 
 if not SQLALCHEMY_DATABASE_URL:
@@ -54,7 +64,17 @@ if not SQLALCHEMY_DATABASE_URL:
     # Use a dummy URL to allow the app to start and report errors via middleware
     SQLALCHEMY_DATABASE_URL = "postgresql://user:pass@localhost/dummy"
 
-print(f"DEBUG: Using DATABASE_URL (redacted): {SQLALCHEMY_DATABASE_URL.split('@')[-1] if '@' in SQLALCHEMY_DATABASE_URL else 'None'}")
+# Show the cleaned URL (redacted password) for debugging
+if SQLALCHEMY_DATABASE_URL:
+    try:
+        # postgresql://user:pass@host:port/db
+        prefix = SQLALCHEMY_DATABASE_URL.split("://")[0]
+        authority = SQLALCHEMY_DATABASE_URL.split("://")[1].split("@")[0]
+        user = authority.split(":")[0]
+        host = SQLALCHEMY_DATABASE_URL.split("@")[-1]
+        print(f"DEBUG: FINAL DATABASE_URL -> {prefix}://{user}:****@{host}")
+    except Exception:
+        print(f"DEBUG: Could not redact URL for logging: {SQLALCHEMY_DATABASE_URL[:20]}...")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
