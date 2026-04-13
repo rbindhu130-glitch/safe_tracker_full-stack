@@ -14,24 +14,39 @@ load_dotenv(dotenv_path=env_path)
 SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 # --- SUPABASE FIX ---
-# 1. Fix 'postgres://' to 'postgresql://' (SQLAlchemy 1.4+ requirement)
+# 1. Fix 'postgres://' to 'postgresql://' (SQLAlchemy 2.0 requirement)
 if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
     SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
 # 2. If using Supabase Pooler (port 6543), username MUST be 'postgres.[PROJECT_REF]'
 if SQLALCHEMY_DATABASE_URL and "pooler.supabase.com" in SQLALCHEMY_DATABASE_URL:
-    supabase_url_env = os.getenv("SUPABASE_URL")
-    if supabase_url_env:
-        try:
-            # Extract project ref from https://ref.supabase.co
-            project_ref = supabase_url_env.split("//")[-1].split(".")[0]
-            if f"postgres.{project_ref}" not in SQLALCHEMY_DATABASE_URL:
-                # Replace 'postgresql://postgres:' with 'postgresql://postgres.[ref]:'
-                # Note: protocol is already postgresql:// from fix above
+    # Try multiple ways to get the PROJECT_REF
+    project_ref = os.getenv("SUPABASE_PROJECT_REF")
+    
+    if not project_ref:
+        supabase_url = os.getenv("SUPABASE_URL")
+        if supabase_url:
+            try:
+                # Extract ref from https://ref.supabase.co
+                project_ref = supabase_url.split("//")[-1].split(".")[0]
+            except Exception: pass
+
+    if project_ref:
+        # Check if username already has the ref
+        if f"postgres.{project_ref}" not in SQLALCHEMY_DATABASE_URL:
+            # We need to replace the username 'postgres' with 'postgres.[ref]'
+            # The replacement targets '://postgres:' to catch it in the authority part
+            if "://postgres:" in SQLALCHEMY_DATABASE_URL:
                 SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("://postgres:", f"://postgres.{project_ref}:")
-                print(f"AUTO-FIX: Added project ref '{project_ref}' to DATABASE_URL for Supabase Pooler.")
-        except Exception:
-            pass
+                print(f"AUTO-FIX: Added project ref '{project_ref}' to DATABASE_URL.")
+            elif "@" in SQLALCHEMY_DATABASE_URL:
+                 # Alternative check if password-less or something weird
+                 parts = SQLALCHEMY_DATABASE_URL.split("@")
+                 if parts[0].endswith("postgres"):
+                      SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres@", f"postgres.{project_ref}@")
+                      print(f"AUTO-FIX (Alt): Added project ref '{project_ref}' to DATABASE_URL.")
+    else:
+        print("WARNING: Using Supabase Pooler but SUPABASE_URL or SUPABASE_PROJECT_REF is missing. Connection will likely fail.")
 # --------------------
 
 if not SQLALCHEMY_DATABASE_URL:
