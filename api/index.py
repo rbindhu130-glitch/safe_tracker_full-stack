@@ -114,17 +114,34 @@ app = FastAPI(title="SafeTracker API")
 async def health_check(db: Session = Depends(database.get_db)):
 
     db_status = "Unknown"
+    db_info = "None"
 
     try:
+        # Check if we can reach the DB
         db.execute(text("SELECT 1"))
         db_status = "Connected"
     except Exception as e:
         db_status = f"Error: {str(e)}"
+        
+    try:
+        # Get masked URL info for debugging
+        url = database.SQLALCHEMY_DATABASE_URL
+        if url:
+             # Mask password: postgresql://user:****@host:port/db
+             parts = url.split("://")
+             auth_part = parts[1].split("@")[0]
+             user = auth_part.split(":")[0]
+             host = parts[1].split("@")[1]
+             db_info = f"{parts[0]}://{user}:****@{host}"
+    except Exception:
+        db_info = "Could not parse URL"
 
     return {
         "status": "online",
         "database": db_status,
-        "is_vercel": os.environ.get("VERCEL") == "1"
+        "database_url_info": db_info,
+        "is_vercel": os.environ.get("VERCEL") == "1",
+        "timestamp": datetime.now().isoformat()
     }
 
 
