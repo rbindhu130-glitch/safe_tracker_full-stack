@@ -1,11 +1,8 @@
 // Universal API Base Detection (Works for Computer, Phone, and Vercel)
 function getApiBase() {
     const { hostname, origin, protocol, port } = window.location;
-    // If on Vercel, use current origin
     if (hostname.includes('vercel.app')) return origin;
-    // If already on backend port, use current origin
     if (port === '8500') return origin;
-    // Otherwise, assume backend is on same IP/hostname but port 8500
     return `${protocol}//${hostname}:8500`;
 }
 const apiBase = getApiBase();
@@ -281,86 +278,6 @@ async function updateStatus(incidentId, action) {
   }
 }
 
-function toggleProfile() {
-  const sidebar = document.getElementById("profileSidebar");
-  const overlay = document.getElementById("sidebarOverlay");
-  sidebar.classList.toggle("active");
-  overlay.classList.toggle("active");
-  if (sidebar.classList.contains("active")) loadProfileData();
-}
-
-function loadProfileData() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  if (!user) return;
-
-  document.getElementById("userNameDisplay").textContent = user.username || "SafeVolunteer";
-  document.getElementById("userEmail").textContent = user.email || "No Email Found";
-  document.getElementById("userRoleBadge").textContent = "VOLUNTEER";
-
-  if (user.profile_image) {
-    const userImg = document.getElementById("userImg");
-    const defaultIcon = document.getElementById("defaultIcon");
-    let imgPath = user.profile_image;
-    if (!imgPath.startsWith('http')) {
-      imgPath = `${apiBase}/${imgPath}`;
-    }
-    userImg.src = imgPath;
-    userImg.classList.remove("hidden");
-    defaultIcon.classList.add("hidden");
-  }
-
-  document.getElementById("editUsername").value = user.username || "";
-  document.getElementById("editEmail").value = user.email || "";
-  document.getElementById("editAddress").value = user.address || "";
-  document.getElementById("userAddress").textContent = user.address || "No address set";
-  
-  // Ensure address fields are visible for volunteers
-  const addrSection = document.getElementById("addressSection");
-  if (addrSection) addrSection.classList.remove("hidden");
-  const editAddrGroup = document.getElementById("editAddressGroup");
-  if (editAddrGroup) editAddrGroup.classList.remove("hidden");
-}
-
-document.getElementById("editProfileForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (isProcessing) return;
-
-  const saveBtn = e.target.querySelector(".btn_save");
-  const originalText = saveBtn.innerHTML;
-
-  isProcessing = true;
-  saveBtn.disabled = true;
-  saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-  const user = JSON.parse(localStorage.getItem("user"));
-  const formData = new FormData();
-  formData.append("user_id", user.id);
-  formData.append("username", document.getElementById("editUsername").value);
-  formData.append("email", document.getElementById("editEmail").value);
-  formData.append("address", document.getElementById("editAddress").value);
-
-  const imageInput = document.getElementById("imageInput");
-  if (imageInput.files[0]) formData.append("image", imageInput.files[0]);
-
-  try {
-    const res = await fetch(`${apiBase}/api/users/profile/update`, {
-      method: "PUT",
-      body: formData
-    });
-    if (res.ok) {
-      const updatedUser = await res.json();
-      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
-      showToast("Profile updated!");
-      document.getElementById("editModal").classList.add("hidden");
-      loadProfileData();
-    }
-  } catch (err) { console.error(err); }
-  finally {
-    isProcessing = false;
-    saveBtn.disabled = false;
-    saveBtn.innerHTML = originalText;
-  }
-});
 
 loadIncidents();
 setInterval(loadIncidents, 5000);

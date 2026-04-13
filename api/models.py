@@ -15,7 +15,6 @@ class User(Base):
     role = Column(String)  # 'user' or 'volunteer'
     profile_image = Column(String, nullable=True)
     address = Column(String, nullable=True)
-    emergency_contact_email = Column(String, nullable=True)
     is_approved = Column(
         Boolean, default=True
     )  # Default True for users, will set to False for volunteers in signup logic
@@ -30,7 +29,7 @@ class User(Base):
 class Incident(Base):
     __tablename__ = "incidents"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True, index=True)  
     title = Column(String)
     full_address = Column(String)
     latitude = Column(Float, nullable=True)

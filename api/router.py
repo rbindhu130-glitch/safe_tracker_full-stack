@@ -56,6 +56,11 @@ def signup(
     image_path = None
 
     if role == "volunteer" and is_file:
+        if image.content_type != "application/pdf":
+            raise HTTPException(
+                status_code=400, detail="Only PDF files are allowed for Aadhar card"
+            )
+
         # PRO-LEVEL: Clean the filename
         original_name = image.filename
         clean_name = "".join(
@@ -146,21 +151,6 @@ def signup(
         "user": schemas.UserResponse.model_validate(user),
     }
 
-
-@router.put("/users/{user_id}")
-def update_user(
-    user_id: int, user_update: schemas.UserUpdate, db: Session = Depends(get_db)
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if user_update.emergency_contact_email is not None:
-        user.emergency_contact_email = user_update.emergency_contact_email
-
-    db.commit()
-    db.refresh(user)
-    return {"message": "User updated successfully"}
 
 
 @router.post("/login")
@@ -565,81 +555,16 @@ def get_complaints(db: Session = Depends(get_db)):
     return db.query(Complaint).order_by(Complaint.created_at.desc()).all()
 
 
-# --- Profile Management ---
+@router.delete("/admin/complaint/{complaint_id}")
+def delete_complaint_admin(complaint_id: int, db: Session = Depends(get_db)):
+    complaint = db.query(Complaint).filter(Complaint.id == complaint_id).first()
+    if not complaint:
+        raise HTTPException(status_code=404, detail="Complaint not found")
 
-
-@router.put("/profile/update", response_model=schemas.UserResponse)
-def update_profile(
-    username: Optional[str] = Form(None),
-    email: Optional[str] = Form(None),
-    mobile: Optional[str] = Form(None),
-    address: Optional[str] = Form(None),
-    user_id: int = Form(...),
-    image: Optional[UploadFile] = File(None),
-    db: Session = Depends(get_db),
-):
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if username:
-        # Check if username is already taken by another user
-        existing_username = (
-            db.query(User).filter(User.username == username, User.id != user_id).first()
-        )
-        if existing_username:
-            raise HTTPException(status_code=400, detail="Username already taken")
-        user.username = username
-    if email:
-        # Optional: Check if email is already taken by another user
-        existing_user = (
-            db.query(User).filter(User.email == email, User.id != user_id).first()
-        )
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email already in use")
-        user.email = email
-    if mobile:
-        user.mobile = mobile
-    if address:
-        user.address = address
-
-    if image and image.filename:
-        original_name = image.filename
-        clean_name = "".join(
-            c if c.isalnum() or c in "._-" else "_" for c in original_name
-        )
-        file_name = f"profile_{user_id}_{clean_name}"
-
-        if supabase_client:
-            try:
-                file_content = image.file.read()
-                supabase_client.storage.from_("safetracker").upload(
-                    path=file_name,
-                    file=file_content,
-                    file_options={"content-type": image.content_type, "upsert": "true"},
-                )
-                user.profile_image = supabase_client.storage.from_(
-                    "safetracker"
-                ).get_public_url(file_name)
-            except Exception as e:
-                print(f"Update profile image error: {e}")
-                # Fallback
-                os.makedirs("uploads", exist_ok=True)
-                file_path = f"uploads/profile_{user_id}_{clean_name}"
-                with open(file_path, "wb") as buffer:
-                    image.file.seek(0)
-                    shutil.copyfileobj(image.file, buffer)
-                user.profile_image = file_path
-        else:
-            os.makedirs("uploads", exist_ok=True)
-            file_path = f"uploads/profile_{user_id}_{clean_name}"
-            with open(file_path, "wb") as buffer:
-                shutil.copyfileobj(image.file, buffer)
-            user.profile_image = file_path
-
+    db.delete(complaint)
     db.commit()
-    db.refresh(user)
-    return user
+    return {"message": "Complaint removed successfully"}
+
 
 
 @router.get(

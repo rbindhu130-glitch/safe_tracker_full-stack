@@ -8,3 +8,5 @@ pydantic
 supabase
 passlib[bcrypt]
 bcrypt
+
+    

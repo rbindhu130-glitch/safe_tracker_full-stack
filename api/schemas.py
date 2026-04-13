@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 from datetime import datetime
 
@@ -9,7 +9,8 @@ class UserBase(BaseModel):
     mobile: str
     role: str
     address: Optional[str] = None
-    emergency_contact_email: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserCreate(UserBase):
@@ -21,19 +22,14 @@ class UserResponse(UserBase):
     profile_image: Optional[str] = None
     is_approved: bool
 
-    class Config:
-        from_attributes = True
-
-
-class UserUpdate(BaseModel):
-    emergency_contact_email: Optional[str] = None
-
 
 class IncidentBase(BaseModel):
     title: str
     full_address: str
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IncidentCreate(IncidentBase):
@@ -57,9 +53,6 @@ class IncidentResponse(IncidentBase):
     volunteer_name: Optional[str] = None
     unread_count: int = 0
 
-    class Config:
-        from_attributes = True
-
 
 class IncidentCreateResponse(BaseModel):
     id: int
@@ -68,8 +61,7 @@ class IncidentCreateResponse(BaseModel):
     status: str
     created_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class IncidentStatusResponse(BaseModel):
@@ -81,8 +73,7 @@ class IncidentStatusResponse(BaseModel):
     created_at: Optional[datetime] = None
     status: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Token(BaseModel):
@@ -100,19 +91,20 @@ class ComplaintCreate(BaseModel):
     subject: str
     message: str
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class ComplaintResponse(ComplaintCreate):
     id: int
     created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class ChatMessageBase(BaseModel):
     message: str
     incident_id: int
     sender_id: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ChatMessageCreate(ChatMessageBase):
@@ -124,6 +116,4 @@ class ChatMessageResponse(ChatMessageBase):
     timestamp: datetime
     sender_name: Optional[str] = None
     is_read: bool
-
-    class Config:
-        from_attributes = True
+

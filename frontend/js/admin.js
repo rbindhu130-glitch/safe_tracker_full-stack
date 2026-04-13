@@ -75,10 +75,11 @@ function renderUsers(users) {
             <td>${user.username}</td>
             <td>${user.email}</td>
             <td>${user.mobile}</td>
+            <td>${user.address || 'N/A'}</td>
             <td><span class="badge badge_${user.role}">${user.role}</span></td>
             <td>${approvalBadge}</td>
             <td>
-                ${isVolunteer ? `<button class="action_btn btn_view" onclick="openImage('${fullImagePath}?t=${Date.now()}')">View ID</button>` : ''}
+                ${isVolunteer ? `<button class="action_btn btn_view" onclick="openImage('${fullImagePath}')">View ID</button>` : ''}
                 ${(isVolunteer && !user.is_approved) ? `<button class="action_btn btn_approve" onclick="approveVolunteer(${user.id})">Approve</button>` : ''}
                 <button class="action_btn btn_delete" onclick="deleteUser(${user.id})">Delete</button>
             </td>
@@ -111,6 +112,7 @@ function renderComplaints(complaints) {
             <td>${comp.subject}</td>
             <td style="max-width: 300px; white-space: normal;">${comp.message}</td>
             <td>${new Date(comp.created_at).toLocaleString()}</td>
+            <td><button class="action_btn btn_delete" onclick="deleteComplaint(${comp.id})">Delete</button></td>
         </tr>
     `).join('');
 }
@@ -144,14 +146,49 @@ async function approveVolunteer(id) {
 }
 
 function openImage(url) {
-    console.log("Opening ID Image:", url);
+    console.log("Opening ID Document:", url);
     const modal = document.getElementById('imageModal');
-    const img = document.getElementById('modalImg');
-    if (!url) {
-        showToast("No image available", "error");
+    const modalContent = document.querySelector('.modal_content');
+    
+    // Strict URL check to handle missing files
+    if (!url || url === "" || url.toLowerCase().includes('null') || url.toLowerCase().includes('undefined')) {
+        showToast("No document has been uploaded by this volunteer.", "error");
         return;
     }
-    img.src = url;
+
+    const isPdf = url.toLowerCase().includes('.pdf');
+    
+    // Clear any existing preview container
+    const existingPreview = modalContent.querySelector('.preview_container');
+    if (existingPreview) existingPreview.remove();
+
+    const previewContainer = document.createElement('div');
+    previewContainer.className = 'preview_container';
+    previewContainer.style.cssText = `
+        margin-top: 15px;
+        width: 100%;
+        height: 500px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #f1f5f9;
+        border: 1px solid #e2e8f0;
+    `;
+
+    if (isPdf) {
+        // Embed PDF with toolbar hidden for cleaner look
+        previewContainer.innerHTML = `<embed src="${url}#toolbar=0&navpanes=0" type="application/pdf" width="100%" height="100%" style="border-radius: 12px;">`;
+    } else {
+        // Fallback for any legacy images
+        previewContainer.innerHTML = `<img src="${url}" alt="ID Document" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 12px;">`;
+    }
+
+    // Insert before the close button
+    const closeBtn = modalContent.querySelector('button');
+    modalContent.insertBefore(previewContainer, closeBtn);
+    
     modal.classList.remove('hidden');
 }
 
@@ -167,6 +204,20 @@ async function deleteUser(id) {
         const res = await fetch(`${apiBase}/api/users/admin/user/${id}`, { method: 'DELETE' });
         if (res.ok) {
             showToast("User deleted");
+            fetchAllData();
+        }
+    } catch (e) { console.error(e); }
+    finally { isAdminProcessing = false; }
+}
+
+async function deleteComplaint(id) {
+    if (isAdminProcessing) return;
+    if (!confirm("Are you sure you want to delete this specific complaint?")) return;
+    isAdminProcessing = true;
+    try {
+        const res = await fetch(`${apiBase}/api/users/admin/complaint/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast("Complaint removed");
             fetchAllData();
         }
     } catch (e) { console.error(e); }
