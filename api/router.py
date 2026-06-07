@@ -13,10 +13,14 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 def hash_password(password: str):
-    return pwd_context.hash(password[:72])
+    truncated_bytes = password.encode('utf-8')[:72]
+    safe_password = truncated_bytes.decode('utf-8', errors='ignore')
+    return pwd_context.hash(safe_password)
 
 def verify_password(plain_password: str, hashed_password: str):
-    return pwd_context.verify(plain_password[:72], hashed_password)
+    truncated_bytes = plain_password.encode('utf-8')[:72]
+    safe_password = truncated_bytes.decode('utf-8', errors='ignore')
+    return pwd_context.verify(safe_password, hashed_password)
 
 
 router = APIRouter(prefix="/users", tags=["Users"])
