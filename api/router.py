@@ -13,13 +13,11 @@ from passlib.context import CryptContext
 pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 def hash_password(password: str):
-    truncated_bytes = password.encode('utf-8')[:72]
-    safe_password = truncated_bytes.decode('utf-8', errors='ignore')
+    safe_password = str(password)[:50]
     return pwd_context.hash(safe_password)
 
 def verify_password(plain_password: str, hashed_password: str):
-    truncated_bytes = plain_password.encode('utf-8')[:72]
-    safe_password = truncated_bytes.decode('utf-8', errors='ignore')
+    safe_password = str(plain_password)[:50]
     return pwd_context.verify(safe_password, hashed_password)
 
 
