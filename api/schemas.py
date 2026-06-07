@@ -51,6 +51,8 @@ class IncidentResponse(IncidentBase):
     volunteer_id: Optional[int] = None
     reporter_name: Optional[str] = None
     volunteer_name: Optional[str] = None
+    volunteer_latitude: Optional[float] = None
+    volunteer_longitude: Optional[float] = None
     unread_count: int = 0
 
 

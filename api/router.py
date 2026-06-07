@@ -10,7 +10,7 @@ import schemas
 from passlib.context import CryptContext
 
 
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(schemes=["bcrypt", "pbkdf2_sha256"], deprecated="auto")
 
 def hash_password(password: str):
     return pwd_context.hash(password)
@@ -205,13 +205,19 @@ def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_
     payload_data = incident.model_dump()
     print(f"DEBUG BACKEND: POST /incidents triggered. Payload: {payload_data}")
     try:
+        # Check if reporter exists
+        reporter_id = payload_data.get("reporter_id")
+        reporter = db.query(User).filter(User.id == reporter_id).first()
+        if not reporter:
+             raise HTTPException(status_code=400, detail="Reporter user not found. Please log in again.")
+
         # Explicitly map fields to avoid any Pydantic/SQLAlchemy mismatch
         new_incident = Incident(
             title=payload_data.get("title"),
             full_address=payload_data.get("full_address"),
             latitude=payload_data.get("latitude"),
             longitude=payload_data.get("longitude"),
-            reporter_id=payload_data.get("reporter_id"),
+            reporter_id=reporter_id,
             status="reported"
         )
         db.add(new_incident)
@@ -235,6 +241,8 @@ def create_incident(incident: schemas.IncidentCreate, db: Session = Depends(get_
             volunteer_id=new_incident.volunteer_id,
             reporter_name=new_incident.reporter.username if new_incident.reporter else "Unknown",
             volunteer_name="Waiting...",
+            volunteer_latitude=None,
+            volunteer_longitude=None,
             unread_count=0
         )
     except Exception as e:
@@ -314,6 +322,9 @@ def update_incident(
     res.volunteer_name = (
         incident.volunteer.username if incident.volunteer else "Waiting..."
     )
+    if incident.volunteer:
+        res.volunteer_latitude = incident.volunteer.last_latitude
+        res.volunteer_longitude = incident.volunteer.last_longitude
     return res
 
 
@@ -322,6 +333,48 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
     try:
         incidents = db.query(Incident).order_by(Incident.created_at.desc()).all()
         print(f"DEBUG: Found {len(incidents)} total incidents in DB")
+        
+        # If user_id is provided, check if the user is a volunteer
+        user_obj = None
+        if user_id:
+            user_obj = db.query(User).filter(User.id == user_id).first()
+
+        # If user is a volunteer, filter incidents based on nearest 5 matching or ownership
+        if user_obj and user_obj.role == "volunteer":
+            all_volunteers = db.query(User).filter(
+                User.role == "volunteer",
+                User.is_approved.is_(True),
+                User.last_latitude.isnot(None),
+                User.last_longitude.isnot(None)
+            ).all()
+
+            filtered_incidents = []
+            for inc in incidents:
+                # If they own the incident, show it (e.g. accepted / in progress / history)
+                if inc.volunteer_id == user_id:
+                    filtered_incidents.append(inc)
+                # If it's reported/pending, filter to top 5 nearest
+                elif (inc.status == "reported" or inc.status == "pending") and not inc.volunteer_id:
+                    if inc.latitude is None or inc.longitude is None:
+                        # Fallback: if no coords, show to all
+                        filtered_incidents.append(inc)
+                    elif user_obj.last_latitude is None or user_obj.last_longitude is None:
+                        # Fallback: if volunteer has no coords yet, show to all
+                        filtered_incidents.append(inc)
+                    else:
+                        # Distance computation
+                        vol_distances = []
+                        for v in all_volunteers:
+                            dist = calculate_distance(inc.latitude, inc.longitude, v.last_latitude, v.last_longitude)
+                            vol_distances.append((v.id, dist))
+                        
+                        vol_distances.sort(key=lambda x: x[1])
+                        nearest_ids = [x[0] for x in vol_distances[:5]]
+                        
+                        if user_id in nearest_ids:
+                            filtered_incidents.append(inc)
+            incidents = filtered_incidents
+
         response = []
         for inc in incidents:
             try:
@@ -347,6 +400,9 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
                 inc_data.volunteer_name = (
                     inc.volunteer.username if inc.volunteer else "Waiting..."
                 )
+                if inc.volunteer:
+                    inc_data.volunteer_latitude = inc.volunteer.last_latitude
+                    inc_data.volunteer_longitude = inc.volunteer.last_longitude
                 inc_data.unread_count = unread_count
                 response.append(inc_data)
             except Exception as inner_e:
@@ -405,6 +461,8 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
                     volunteer_id=inc.volunteer_id,
                     reporter_name=inc.reporter.username if inc.reporter else "Unknown",
                     volunteer_name=inc.volunteer.username if inc.volunteer else "Waiting...",
+                    volunteer_latitude=inc.volunteer.last_latitude if inc.volunteer else None,
+                    volunteer_longitude=inc.volunteer.last_longitude if inc.volunteer else None,
                     unread_count=unread_count
                 )
                 response_list.append(inc_data)
@@ -419,14 +477,30 @@ def get_user_incidents(user_id: int, db: Session = Depends(get_db)):
 
 @router.put("/incidents/{incident_id}/accept")
 def accept_incident(incident_id: int, volunteer_id: int, db: Session = Depends(get_db)):
+    # Check if volunteer exists
+    volunteer = db.query(User).filter(User.id == volunteer_id).first()
+    if not volunteer:
+        print(f"DEBUG BACKEND: volunteer_id {volunteer_id} not found in users table")
+        raise HTTPException(
+            status_code=400, 
+            detail="Volunteer account not found. Your session may have expired or been removed. Please log out and sign up again."
+        )
+
     incident = db.query(Incident).filter(Incident.id == incident_id).first()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
     if incident.volunteer_id:
         raise HTTPException(status_code=400, detail="Incident already assigned")
-    incident.volunteer_id = volunteer_id
-    incident.status = "in_progress"
-    db.commit()
+    
+    try:
+        incident.volunteer_id = volunteer_id
+        incident.status = "in_progress"
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"DEBUG BACKEND ERROR during accept: {e}")
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        
     return {"message": "Incident accepted and started"}
 
 
@@ -486,16 +560,111 @@ def confirm_incident(incident_id: int, confirmed: bool, db: Session = Depends(ge
 # Removed verify_incident_email endpoint as it is unused without SMTP configuration.
 
 
+import math
+from datetime import datetime
+
+def calculate_distance(lat1: Optional[float], lon1: Optional[float], lat2: Optional[float], lon2: Optional[float]) -> float:
+    if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
+        return float('inf')
+    # Haversine Formula
+    R = 6371.0  # Earth radius in kilometers
+    try:
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = (math.sin(dlat / 2) ** 2 +
+             math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+             math.sin(dlon / 2) ** 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
+    except Exception:
+        return float('inf')
+
+
+@router.put("/volunteer/location")
+def update_volunteer_location(
+    volunteer_id: int = Query(...),
+    lat: float = Query(...),
+    lng: float = Query(...),
+    db: Session = Depends(get_db)
+):
+    user = db.query(User).filter(User.id == volunteer_id).first()
+    if not user or user.role != "volunteer":
+        raise HTTPException(status_code=400, detail="Invalid volunteer ID")
+    
+    user.last_latitude = lat
+    user.last_longitude = lng
+    db.commit()
+    return {"message": "Location updated successfully"}
+
+
 @router.get("/available-incidents", response_model=List[schemas.IncidentResponse])
-def get_available_incidents(db: Session = Depends(get_db)):
+def get_available_incidents(volunteer_id: Optional[int] = Query(None), db: Session = Depends(get_db)):
     # Return only reported incidents for volunteers
-    incidents = db.query(Incident).filter(Incident.status == "reported").order_by(Incident.created_at.desc()).all()
-    response = []
+    incidents = db.query(Incident).filter(Incident.status == "reported").all()
+    
+    # If no volunteer_id is supplied, fall back to returning all reported incidents sorted by date
+    if not volunteer_id:
+        incidents_sorted = sorted(incidents, key=lambda x: x.created_at or datetime.min, reverse=True)
+        response = []
+        for inc in incidents_sorted:
+            inc_data = schemas.IncidentResponse.model_validate(inc)
+            inc_data.reporter_name = inc.reporter.username if inc.reporter else "Unknown"
+            inc_data.volunteer_name = "Waiting..."
+            response.append(inc_data)
+        return response
+        
+    # Get the volunteer
+    vol = db.query(User).filter(User.id == volunteer_id).first()
+    if not vol:
+        raise HTTPException(status_code=404, detail="Volunteer not found")
+        
+    # Get all active approved volunteers with coordinates to find relative distances
+    all_volunteers = db.query(User).filter(
+        User.role == "volunteer",
+        User.is_approved.is_(True),
+        User.last_latitude.isnot(None),
+        User.last_longitude.isnot(None)
+    ).all()
+    
+    visible_incidents = []
+    
     for inc in incidents:
+        # If incident doesn't have coordinates, show it to all volunteers as a fallback
+        if inc.latitude is None or inc.longitude is None:
+            visible_incidents.append(inc)
+            continue
+            
+        # If this querying volunteer has no coordinates yet, show it (so list is not blank initially)
+        if vol.last_latitude is None or vol.last_longitude is None:
+            visible_incidents.append(inc)
+            continue
+            
+        # Calculate distance from this incident to all active volunteers
+        vol_distances = []
+        for v in all_volunteers:
+            dist = calculate_distance(inc.latitude, inc.longitude, v.last_latitude, v.last_longitude)
+            vol_distances.append((v.id, dist))
+            
+        # Sort volunteers by distance
+        vol_distances.sort(key=lambda x: x[1])
+        
+        # Get top 5 nearest volunteer IDs
+        nearest_ids = [x[0] for x in vol_distances[:5]]
+        
+        # If the querying volunteer is in the top 5 nearest, show the incident to them
+        if vol.id in nearest_ids:
+            visible_incidents.append(inc)
+
+    # Sort visible incidents by date (newest first)
+    visible_incidents.sort(key=lambda x: x.created_at or datetime.min, reverse=True)
+    
+    response = []
+    for inc in visible_incidents:
         inc_data = schemas.IncidentResponse.model_validate(inc)
         inc_data.reporter_name = inc.reporter.username if inc.reporter else "Unknown"
         inc_data.volunteer_name = "Waiting..."
         response.append(inc_data)
+        
     return response
 
 
@@ -592,6 +761,11 @@ def get_chat_messages(incident_id: int, db: Session = Depends(get_db)):
 def post_chat_message(
     incident_id: int, chat: schemas.ChatMessageCreate, db: Session = Depends(get_db)
 ):
+    # Check if sender exists
+    sender = db.query(User).filter(User.id == chat.sender_id).first()
+    if not sender:
+        raise HTTPException(status_code=400, detail="Sender not found. Please log in again.")
+
     db_msg = ChatMessage(
         incident_id=incident_id,
         sender_id=chat.sender_id,

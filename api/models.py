@@ -18,6 +18,8 @@ class User(Base):
     is_approved = Column(
         Boolean, default=True
     )  # Default True for users, will set to False for volunteers in signup logic
+    last_latitude = Column(Float, nullable=True)
+    last_longitude = Column(Float, nullable=True)
     incidents_reported = relationship(
         "Incident", back_populates="reporter", foreign_keys="Incident.reporter_id"
     )

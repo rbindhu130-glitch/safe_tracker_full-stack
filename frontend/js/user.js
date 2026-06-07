@@ -190,8 +190,16 @@ async function loadRequests() {
         }
 
         const data = await response.json();
+        
+        // Prevent jumpy UI and map reloads if data hasn't changed
+        const dataHash = JSON.stringify(data);
+        if (window.lastIncidentsHash === dataHash) {
+            return;
+        }
+        window.lastIncidentsHash = dataHash;
+        
         console.log(`DEBUG FETCH: URL /api/users/incidents/user/${user.id} -> Status ${response.status}`);
-        console.log(`DEBUG FETCH: Data received for user ${user.id}:`, JSON.stringify(data));
+        console.log(`DEBUG FETCH: Data received for user ${user.id}:`, dataHash);
         
         const list = document.getElementById("requestList");
         if (!list) {
@@ -285,7 +293,60 @@ async function loadRequests() {
                 </div>
               </div>
             `;
+            // Add Map Container if in progress
+            const mapId = `user_map_${req.id}`;
+            if (req.status === 'in_progress' || req.status === 'accepted') {
+                div.innerHTML += `
+                    <div id="${mapId}" style="margin-top: 15px; width: 100%; height: 200px; border-radius: 8px; z-index: 1;"></div>
+                `;
+            }
+
             list.appendChild(div);
+
+            // Initialize Map
+            if (req.status === 'in_progress' || req.status === 'accepted') {
+                setTimeout(() => {
+                    try {
+                        if (!document.getElementById(mapId)) return;
+                        const uMap = L.map(mapId).setView([req.latitude || 13.0827, req.longitude || 80.2707], 15);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(uMap);
+                        
+                        // User marker
+                        if (req.latitude && req.longitude) {
+                            L.marker([req.latitude, req.longitude]).addTo(uMap).bindPopup("Your Location");
+                        }
+
+                        // Volunteer routing
+                        if (req.volunteer_latitude && req.volunteer_longitude && req.latitude && req.longitude) {
+                            const vIcon = L.divIcon({
+                                className: 'custom-div-icon',
+                                html: "<div style='background-color:#059669; width:16px; height:16px; border-radius:50%; border:2px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.5);'></div>",
+                                iconSize: [20, 20],
+                                iconAnchor: [10, 10]
+                            });
+                            L.marker([req.volunteer_latitude, req.volunteer_longitude], { icon: vIcon }).addTo(uMap).bindPopup("Volunteer Location");
+
+                            L.Routing.control({
+                                waypoints: [
+                                    L.latLng(req.latitude, req.longitude),
+                                    L.latLng(req.volunteer_latitude, req.volunteer_longitude)
+                                ],
+                                lineOptions: {
+                                    styles: [{ color: '#2563eb', opacity: 0.8, weight: 6 }]
+                                },
+                                createMarker: function() { return null; },
+                                addWaypoints: false,
+                                draggableWaypoints: false,
+                                fitSelectedRoutes: true,
+                                showAlternatives: false,
+                                show: false
+                            }).addTo(uMap);
+                        }
+                    } catch (e) {
+                        console.error("User routing map error:", e);
+                    }
+                }, 100);
+            }
         });
 
         activeIncidentIds = activeIds;

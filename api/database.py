@@ -48,7 +48,7 @@ if SQLALCHEMY_DATABASE_URL and "pooler.supabase.com" in SQLALCHEMY_DATABASE_URL:
             elif "@" in SQLALCHEMY_DATABASE_URL:
                  # Alternative check if password-less or something weird
                  parts = SQLALCHEMY_DATABASE_URL.split("@")
-                 # parts[0] is 'postgresql://user'
+                 # parts[0] is 'postgresq6l://user'
                  if parts[0].endswith("postgres") or "postgres:" in parts[0]:
                       if "postgres:" in parts[0]:
                            SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres:", f"postgres.{project_ref}:")
@@ -98,3 +98,4 @@ def get_db():
         yield db
     finally:
         db.close()
+    

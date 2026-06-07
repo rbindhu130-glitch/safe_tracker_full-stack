@@ -45,11 +45,28 @@ let vLat = null;
 let vLng = null;
 let vWatchId = null;
 
+async function pingVolunteerLocation(lat, lng) {
+  if (!user || !user.id) return;
+  try {
+    const res = await fetch(`${apiBase}/api/users/volunteer/location?volunteer_id=${user.id}&lat=${lat}&lng=${lng}`, {
+      method: "PUT"
+    });
+    if (res.ok) {
+      console.log("Volunteer location successfully updated on server:", lat, lng);
+    } else {
+      console.warn("Server refused volunteer location update:", res.status);
+    }
+  } catch (e) {
+    console.error("Error pinging volunteer location:", e);
+  }
+}
+
 if (navigator.geolocation) {
   vWatchId = navigator.geolocation.watchPosition((pos) => {
     vLat = pos.coords.latitude;
     vLng = pos.coords.longitude;
     console.log("Volunteer location updated:", vLat, vLng);
+    pingVolunteerLocation(vLat, vLng);
   }, (err) => {
     console.warn("Volunteer GPS error", err);
   }, { enableHighAccuracy: true, timeout: 10000 });
@@ -130,15 +147,13 @@ async function loadIncidents() {
       // Temporary: Show ALL reported incidents regardless of location match for debugging
       if ((incident.status === "reported" || incident.status === "pending") && !incident.volunteer_id) {
         console.log(`DEBUG: Incident ${incident.id} MATCHES filter. Appending to liveList.`);
-        
-        const nearbyBadge = ""; // Logic for nearby removed to show all requests as requested by user previously
 
         const div = document.createElement("div");
         div.className = "request";
         div.innerHTML = `
               <div class="request_row">
                 <div class="request_info">
-                  <p class="request_title">${nearbyBadge}${incidentLabels[incident.title] || incident.title.toUpperCase()}</p>
+                  <p class="request_title">${incidentLabels[incident.title] || incident.title.toUpperCase()}</p>
                   <p style="color:var(--primary); font-size:14px; margin-bottom:4px;">Reported by: <strong>${incident.reporter_name || 'Anonymous'}</strong></p>
                   <p class="request_meta">${incident.full_address || 'No location'} <span class="dot"></span> ${new Date(incident.created_at).toLocaleString()}</p>
                 </div>
@@ -202,18 +217,22 @@ async function loadIncidents() {
             });
             L.marker([vLat, vLng], { icon: vIcon }).addTo(vmap).bindPopup("Your Location");
 
-            // Draw a line connecting Volunteer and User
-            const routeLine = L.polyline([
-              [lat, lng],
-              [vLat, vLng]
-            ], {
-              color: '#2563eb', // primary blue
-              weight: 4,
-              opacity: 0.7,
-              dashArray: '10, 10'
+            // Draw a road route connecting Volunteer and User
+            L.Routing.control({
+              waypoints: [
+                L.latLng(vLat, vLng),
+                L.latLng(lat, lng)
+              ],
+              lineOptions: {
+                styles: [{ color: '#2563eb', opacity: 0.8, weight: 6 }]
+              },
+              createMarker: function() { return null; }, // We already have custom markers
+              addWaypoints: false,
+              draggableWaypoints: false,
+              fitSelectedRoutes: true,
+              showAlternatives: false,
+              show: false // Hide the detailed text instructions box
             }).addTo(vmap);
-
-            vmap.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
           }
 
           mapInstances[mapId] = vmap;

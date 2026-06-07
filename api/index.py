@@ -37,7 +37,6 @@ try:
         print("DEBUG: Attempting database migration/init...")
         models.Base.metadata.create_all(bind=database.engine)
 
-        # Manual database migration (new columns add panna)
         with database.engine.connect() as conn:
 
             # users table la is_approved column iruka nu check
@@ -47,6 +46,25 @@ try:
             if not res.fetchone():
                 conn.execute(text(
                     "ALTER TABLE users ADD COLUMN is_approved BOOLEAN DEFAULT TRUE"
+                ))
+                conn.commit()
+
+            # users table la last_latitude and last_longitude column update check
+            res_lat = conn.execute(text(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='last_latitude'"
+            ))
+            if not res_lat.fetchone():
+                conn.execute(text(
+                    "ALTER TABLE users ADD COLUMN last_latitude FLOAT"
+                ))
+                conn.commit()
+
+            res_lng = conn.execute(text(
+                "SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='last_longitude'"
+            ))
+            if not res_lng.fetchone():
+                conn.execute(text(
+                    "ALTER TABLE users ADD COLUMN last_longitude FLOAT"
                 ))
                 conn.commit()
 
@@ -68,27 +86,22 @@ except Exception as e:
     # Don't raise here, allow the app to start so we can see errors in /api/health
 
 
-# WebSocket connection manager (chat users manage panna)
 class ConnectionManager:
 
     def __init__(self):
-        # incident_id based ah users store pannum
         self.active_connections: Dict[int, List[tuple]] = {}
 
     async def connect(self, websocket: WebSocket, incident_id: int, user_id: int):
-        # user connect aana websocket accept pannum
         await websocket.accept()
 
         if incident_id not in self.active_connections:
             self.active_connections[incident_id] = []
 
-        # user connection store pannum
         self.active_connections[incident_id].append((user_id, websocket))
 
     def disconnect(self, websocket: WebSocket, incident_id: int):
 
         if incident_id in self.active_connections:
-            # disconnected user remove pannum
             self.active_connections[incident_id] = [
                 conn for conn in self.active_connections[incident_id]
                 if conn[1] != websocket
@@ -98,7 +111,6 @@ class ConnectionManager:
 
         if incident_id in self.active_connections:
 
-            # incident chat la iruka ellarukum message send pannum
             for _, websocket in self.active_connections[incident_id]:
                 await websocket.send_json(message)
 
@@ -110,7 +122,6 @@ manager = ConnectionManager()
 app = FastAPI(title="SafeTracker API")
 
 
-# Health check API (server working ah nu check panna)
 @app.get("/api/health")
 async def health_check(db: Session = Depends(database.get_db)):
 
@@ -175,12 +186,12 @@ async def websocket_endpoint(websocket: WebSocket, incident_id: int, user_id: in
 
         while True:
 
-            # message receive pannum
+            
             data = await websocket.receive_text()
 
             message_data = json.loads(data)
 
-            # database la message save pannum
+          
             db_msg = models.ChatMessage(
                 incident_id=incident_id,
                 sender_id=user_id,
