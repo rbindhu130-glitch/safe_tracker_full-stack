@@ -350,19 +350,26 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
                 User.last_longitude.isnot(None)
             ).all()
 
+            from datetime import timedelta
+            time_threshold = datetime.utcnow() - timedelta(hours=24)
+            
             filtered_incidents = []
             for inc in incidents:
                 # If they own the incident, show it (e.g. accepted / in progress / history)
                 if inc.volunteer_id == user_id:
                     filtered_incidents.append(inc)
-                # If it's reported/pending, filter to top 5 nearest
+                # If it's reported/pending, check conditions
                 elif (inc.status == "reported" or inc.status == "pending") and not inc.volunteer_id:
+                    # Skip old unassigned requests (older than 24 hours)
+                    if inc.created_at and inc.created_at < time_threshold:
+                        continue
+                        
                     if inc.latitude is None or inc.longitude is None:
                         # Fallback: if no coords, show to all
                         filtered_incidents.append(inc)
                     elif user_obj.last_latitude is None or user_obj.last_longitude is None:
-                        # Fallback: if volunteer has no coords yet, show to all
-                        filtered_incidents.append(inc)
+                        # If volunteer hasn't shared location yet, do NOT show them anything to prevent clutter
+                        pass
                     else:
                         # Distance computation
                         vol_distances = []
@@ -373,7 +380,11 @@ def get_incidents(user_id: Optional[int] = Query(None), db: Session = Depends(ge
                         vol_distances.sort(key=lambda x: x[1])
                         nearest_ids = [x[0] for x in vol_distances[:5]]
                         
-                        if user_id in nearest_ids:
+                        # Find the distance of the current user to this incident
+                        user_dist = next((dist for vid, dist in vol_distances if vid == user_id), None)
+                        
+                        # Only show if they are in top 5 AND within 10 km
+                        if user_id in nearest_ids and user_dist is not None and user_dist <= 10.0:
                             filtered_incidents.append(inc)
             incidents = filtered_incidents
 
